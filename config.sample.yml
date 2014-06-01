@@ -1,0 +1,68 @@
+# Sample cluster configuration for AWS
+
+# what region are we working in here?
+region: 'us-west-2'  # Oregon, yo
+
+# your yum repo that houses your RPMs
+repo:
+    # use yum-s3-iam plugin to access our private s3 repo with an instance role
+    plugin: https://s3-us-west-2.amazonaws.com/myapp-pub/provision/yum-plugin-s3-iam-1.0-1.noarch.rpm
+    # yum repo file
+    url: https://s3-us-west-2.amazonaws.com/myapp-pub/myapp.repo
+
+# defaults for all clusters/roles
+global:
+    # AMI to use for all instances (unless overridden)
+    ami: 'ami-b99dea89'
+    # common packages to install for all instances
+    packages:
+        - 'myapp-base'
+
+# cluster = set of AWS resources managed as a group
+# (instances, RDS, ASgroup, launchconfigs, all in a VPC)
+clusters:
+    # create a "development" cluster
+    dev:
+        # human-readable name
+        description: "Development"
+        # yum packages to install
+        packages:
+            - 'myapp-prov-dev'
+            - 'myapp-cfg-dev'
+        keypair_name: 'dev'
+        # application roles for instances
+        # think: sub-clusters that can be managed as distinct sets
+        roles:
+            webapp:
+                subnet: 'subnet-abcdef123'
+                instance_type: 'm1.medium'
+                scale_policy:
+                    min_size: 1
+                    max_size: 3
+                    desired: 2
+                elbs:
+                    - 'dev-https'
+                security_groups:
+                    - 'sg-abcdef123'  # you'll want to set this up manually
+                packages:
+                    - 'myapp-app'
+                    - 'myapp-app-deps'
+                    - 'myapp-app-core'
+                    - 'myapp-static'
+                tags:
+                    'myapp-web-workers': 10
+            worker:
+                instance_type: 'm1.medium'
+                packages:
+                    - 'myapp-schwartz-worker'
+                    - 'myapp-daemon-worker'
+                scale_policy:
+                    min_size: 1
+                    max_size: 4
+                    desired: 1
+    qa:
+        # ...
+    stage:
+        # ...
+    prod:
+        # ...
