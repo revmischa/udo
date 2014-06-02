@@ -4,7 +4,7 @@ import sys
 import warnings
 import os
 import argparse
-from pprint import pprint 
+from pprint import pprint
 
 import cluster
 
@@ -20,14 +20,26 @@ from boto.ec2.autoscale import AutoScalingGroup
 # top-level commands go here
 class Udo:
     def cluster(self, *args):
-        action = args[0]
-        if not action:
-            print "Cluster command requires an action. Valid actions are: "
-            print " list"
+        args = list(args)
+        if not len(args) or not args[0]:
+            print "cluster command requires an action. Valid actions are: "
+            print " list\n status"
             return
+        action = args.pop(0)
 
         if action == 'list':
             cluster.list()
+        else:
+            # actions that require a cluster name
+            if not len(args) or not args[0]:
+                print "cluster name required for {}".format(action)
+                return
+            cluster_name = args.pop(0)
+            cl = cluster.Cluster(cluster_name)
+            if action == 'status':
+                print "{} status: {}".format(cluster_name, cl.status())
+            else:
+                print "Unknown cluster command: {}".format(action)
         return
 
 
@@ -46,6 +58,8 @@ if __name__ == '__main__':
     
     if args.action not in dir(Udo):
         print "{} is not a valid command".format(args.action)
+        print "Valid commands are:"
+        print " cluster list"
         sys.exit(1)
 
     # execute action
