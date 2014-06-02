@@ -51,10 +51,26 @@ class Cluster:
         if not vpc:
             return { 'exists': False }
 
+        # check if this VPC is managed by udo
+        tags = vpc.tags
+        vpc_is_managed = False
+        if 'Udo' in tags:
+            vpc_is_managed = True
+
         return {
+            'udo': vpc_is_managed,
             'exists': True,
             'state': vpc.state,
             'id': vpc.id
         }
-        
+    
+    # active this cluster, bring up VPC and ASgroups, configure launchconfigs
+    def activate(self):
+        vpc = self._get_vpc_by_name(self.name)
+        if not vpc:
+            # create VPC
+            # ...
 
+        # mark that this cluster is being managed by udo
+        vpc.add_tag('udo', value=True)
+        
