@@ -6,7 +6,7 @@ import os
 import argparse
 from pprint import pprint 
 
-import config
+import cluster
 
 import boto.ec2.autoscale
 from boto.ec2.autoscale import AutoScaleConnection
@@ -14,12 +14,24 @@ from boto.ec2.autoscale import LaunchConfiguration
 from boto.ec2.autoscale import AutoScalingGroup
 
 
+#####
+
+
 # top-level commands go here
 class Udo:
     def cluster(self, *args):
-        print "Cluster: {}".format(args)
+        action = args[0]
+        if not action:
+            print "Cluster command requires an action. Valid actions are: "
+            print " list"
+            return
+
+        if action == 'list':
+            cluster.list()
+        return
 
 
+#####
 
 
 if __name__ == '__main__':
@@ -38,5 +50,5 @@ if __name__ == '__main__':
 
     # execute action
     exe = Udo()
-    method = Udo.__dict__.get(args.action)
-    method(exe, args.action_args)
+    method = getattr(exe, args.action)
+    method(*args.action_args)

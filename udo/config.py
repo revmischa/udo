@@ -1,10 +1,18 @@
 import yaml
 
+
+# class method
+def load():
+    _path = "config.sample.yml"
+    _config_instance = Config()
+    f = open(_path, 'r')
+    contents = f.read()
+    f.close()
+    return _config_instance.parse(contents)
+
+
 class Config:
     _cfg = None
-
-    def load(self):
-        self.parse("a: 1")
 
     # given a YAML string, parse it into a python data structure
     def parse(self, config_yaml):
