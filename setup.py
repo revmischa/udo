@@ -40,6 +40,7 @@ setup(
     include_package_data=True,
     platforms='any',
     test_suite='tests',
+    scripts=['udo'],
     classifiers=[
         'Programming Language :: Python',
         # ....
