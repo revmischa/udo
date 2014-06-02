@@ -32,14 +32,7 @@ class Config:
         # iterate downwards, merging all values we find
         cur_val = None
 
-        # look up default value in global section
-        if 'global' in cfg:
-            global_config = cfg.get('global')
-            if key in global_config:
-                # found default global value
-                cur_val = global_config.get(key)
-                # print "found " + key + " in global"
-
+        # start at root level
         cur_level = cfg
 
         cur_level_key = 'root'

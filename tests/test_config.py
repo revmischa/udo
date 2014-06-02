@@ -6,13 +6,12 @@ class TestConfig(unittest.TestCase):
     def setUp(self):
         self.conf_yaml = """
 region: ca-north-2
-global:
-    ami: 'ami-global'
-    packages:
-        - 'foo-base'
-    tags:
-        gtag1: a
-        gtag2: b
+ami: 'ami-global'
+packages:
+    - 'foo-base'
+tags:
+    gtag1: a
+    gtag2: b
 clusters:
     dev:
         tags:

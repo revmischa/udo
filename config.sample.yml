@@ -1,8 +1,5 @@
 # Sample cluster configuration for AWS
 
-# what region are we working in here?
-region: 'us-west-2'  # Oregon, yo
-
 # your yum repo that houses your RPMs
 repo:
     # use yum-s3-iam plugin to access our private s3 repo with an instance role
@@ -10,13 +7,13 @@ repo:
     # yum repo file
     url: https://s3-us-west-2.amazonaws.com/myapp-pub/myapp.repo
 
-# defaults for all clusters/roles
-global:
-    # AMI to use for all instances (unless overridden)
-    ami: 'ami-b99dea89'
-    # common packages to install for all instances
-    packages:
-        - 'myapp-base'
+
+### global defaults for all clusters/roles
+region: 'us-west-2'  # what region are we working in here? (Oregon, yo)
+ami: 'ami-b99dea89'  # AMI to use for all instances (unless overridden)
+packages:            # common packages to install for all instances
+    - 'myapp-base'
+
 
 # cluster = set of AWS resources managed as a group
 # (instances, RDS, ASgroup, launchconfigs, all in a VPC)
