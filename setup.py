@@ -33,7 +33,7 @@ setup(
         'Boto>=2.0.0',
         'PyYAML',
     ],
-    author_email='mischa@doctorbase.com',
+    author_email='revmischa@cpan.org',
     description='Automate AWS deployments',
     long_description=long_description,
     packages=['udo'],
