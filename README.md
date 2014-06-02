@@ -21,6 +21,6 @@ If you're using Puppet, Chef, or care about hostnames/IPs, you're almost definit
 ### Summary of a proper AWS setup:
 - LaunchConfigs per role, in a VPC per cluster
 - Install your application and configs via RPMs
+- Stick your RPMs in a private S3 repo, authenticate access via yum-s3-iam
 - Apply tags to instances per role, so they can know what RPMs to install to provision themselves
 - Use the Udo cloud-init script to provision instances
-- ...
