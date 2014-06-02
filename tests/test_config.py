@@ -10,8 +10,13 @@ global:
     ami: 'ami-global'
     packages:
         - 'foo-base'
+    tags:
+        gtag1: a
+        gtag2: b
 clusters:
     dev:
+        tags:
+            dtag1: c
         packages:
             - dev-pkg1
             - dev-pkg2
@@ -21,6 +26,8 @@ clusters:
                 packages:
                     - dev-webapp-pkg1
                 ami: 'ami-dev-webapp'
+                tags:
+                    wtag1: d
     prod:
         ami: 'ami-prod'
 """
@@ -40,6 +47,9 @@ clusters:
         dev_pkgs_merged = self.conf.get('clusters', 'dev', 'packages')
         self.assertEqual(dev_pkgs_merged, dev_pkgs_expected)
 
+    def test_merge_hash(self):
+        self.assertEqual(self.conf.get('clusters', 'dev', 'tags'), { 'gtag1': 'a', 'gtag2': 'b', 'dtag1': 'c'})
+        self.assertEqual(self.conf.get('clusters', 'dev', 'roles', 'webapp', 'tags'), { 'gtag1': 'a', 'gtag2': 'b', 'dtag1': 'c', 'wtag1': 'd' })
 
 ###
 

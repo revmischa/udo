@@ -1,5 +1,4 @@
 import yaml
-from itertools import chain
 
 class Config:
     _cfg = None
@@ -60,10 +59,12 @@ class Config:
 
         return cur_val
 
+    # returns combination of val1+val2:
     # if val1 or val2 is None, returns whichever is not None
     # if val1 and val2 are lists, returns a combined list
     # if val1 and val2 are dict, returns a combined dict
     # if val1 and val2 are different non-None types, explodes
+    # should this be recurse? not sure
     def merge(self, val1, val2):
         if val1 is None:
             return val2
@@ -80,7 +81,8 @@ class Config:
 
         if val1.__class__ is dict:
             # merge dicts
-            return dict(chain.from_iterable(val1.iteritems() for d in val2))
+            merged = dict(val1.items() + val2.items())
+            return merged
 
         # assume scalar, val2 overwrites val1
         return val2
