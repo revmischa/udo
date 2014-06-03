@@ -46,11 +46,11 @@ If you're using Puppet, Chef, or care about hostnames/IPs, you're almost definit
 ### Summary of a proper AWS setup:
 
 #### Your job:
-- Describe your architecture in `config.yml`
-- Have some very simple way of setting up your app. One recommendation is to install your application and configs via RPMs, though this is not required
-- If you use RPMs, stick your RPMs in a private S3 repo and authenticate access via [yum-s3-iam](https://github.com/seporaitis/yum-s3-iam)
+- Describe your architecture in `config.yml`.
+- Have some very simple way of setting up your app. One recommendation is to install your application and configs via RPMs, though this is not required.
+- If you use RPMs, stick your RPMs in a private S3 repo and authenticate access via [yum-s3-iam](https://github.com/seporaitis/yum-s3-iam).
 
 #### Udo takes care of:
-- LaunchConfigs per role, in a VPC and AutoScaleGroup per cluster
-- Apply tags to instances per role, so they can know what RPMs to install
-- Use a cloud-init script to provision instances via RPMs
+- LaunchConfigs per role, in a VPC and AutoScaleGroup per cluster.
+- Apply tags to instances to identify their roles.
+- Installing a cloud-init script to provision instances. You can add your own commands to it via config.
