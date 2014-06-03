@@ -8,14 +8,18 @@ will manage.
 
 ## Quickstart:  
 
-#### Configure boto with your AWS credentials
-See: http://boto.readthedocs.org/en/latest/boto_config_tut.html#details
+#### Step 1: Configure boto with your AWS credentials
+* See: http://boto.readthedocs.org/en/latest/boto_config_tut.html#details
 
+#### Step 2: Configure boto
 ```
 # describe our application clusters
 cp config.sample.yml config.yml
 emacs config.yml   # replace 'emacs' with 'vim' if you are a simple-minded cretin
+```
 
+#### Step 3: ... That's it! There's no step 3.
+```
 # view cluster status
 script/udo cluster list
 
