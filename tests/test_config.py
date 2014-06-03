@@ -31,8 +31,8 @@ clusters:
         ami: 'ami-prod'
 """
 
-        self.conf = udo.config.Config()
-        self.parsed = self.conf.parse(self.conf_yaml)
+        self.parsed = udo.config.parse(self.conf_yaml)
+        self.conf = udo.config.Config(self.parsed)
         self.assertTrue(self.parsed)
         pass
 
@@ -49,6 +49,15 @@ clusters:
     def test_merge_hash(self):
         self.assertEqual(self.conf.get('clusters', 'dev', 'tags'), { 'gtag1': 'a', 'gtag2': 'b', 'dtag1': 'c'})
         self.assertEqual(self.conf.get('clusters', 'dev', 'roles', 'webapp', 'tags'), { 'gtag1': 'a', 'gtag2': 'b', 'dtag1': 'c', 'wtag1': 'd' })
+
+    def test_new_root(self):
+        tags_root = self.conf.new_root('tags')
+        self.assertEqual(tags_root.get('gtag2'), 'b')
+        self.assertEqual(self.conf.get('tags'), tags_root.get_root())
+        dev_roles_root = self.conf.new_root('clusters', 'dev', 'roles')
+        webapp_root = dev_roles_root.new_root('webapp')
+        packages = webapp_root.get('packages')
+        self.assertEqual(packages, ['foo-base', 'dev-pkg1', 'dev-pkg2', 'dev-webapp-pkg1'])
 
 ###
 

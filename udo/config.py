@@ -1,38 +1,81 @@
 import yaml
+from pprint import pprint
 
+"""
+This class provides an interface into the entire AWS configuration.
+It does more than simply convert a config file into a python data structure;
+when you request a key, it will merge all values it finds downwards from the
+root, using values defined at the root as defaults.
+In addition, hashes and arrays are combined as it merges down.
+
+If this is unclear, take a look at test_config.py and config.sample.yml. 
+
+how2use:
+    cfg = Config()
+
+    # get a root configuration value
+    region = cfg.get('region')
+
+    # get a role config object
+    role_cfg = cfg.new_root('clusters', 'prod', 'roles', 'webapp')
+    
+    # really queries clusters.prod.roles.webapp.packages, merging any packages 
+    # array values it finds along the way
+    role_cfg.get('packages')  
+""" 
 
 # class method
 def load():
     _path = "config.sample.yml"
-    _config_instance = Config()
     f = open(_path, 'r')
     contents = f.read()
     f.close()
-    return _config_instance.parse(contents)
+    return parse(contents)
 
+
+# given a YAML string, parse it into a python data structure
+def parse(config_yaml):
+    return yaml.load(config_yaml)
 
 class Config:
-    _cfg = None
+    _root = None
+    _path = None
 
-    # given a YAML string, parse it into a python data structure
-    def parse(self, config_yaml):
-        self._cfg = yaml.load(config_yaml)
-        return self._cfg
+    def __init__(self, root=None):
+        if root:
+            self._root = root
+        else:
+            self._root = load()
+
+    def clone(self):
+        return Config(self._root)
+
+    # returns a new Config with its base path set to *base
+    def new_root(self, *base):
+        new_cfg = self.clone()
+        if self._path:
+            base = self._path + base
+        new_cfg._path = base
+        return new_cfg
+
+    # get value at current path root
+    def get_root(self):
+        return self.get()
 
     def get(self, *path):
+        if self._path:
+            path = self._path + path
+            # print "Current path is: {}".format(path)
+
+        cfg = self._root
+
+        # no path specified? return root
         if len(path) == 0:
-            raise Error("config.get requires a key path")
-            return
-
-        # make sure config is loaded
-        if not self._cfg:
-            self.load()
-
-        cfg = self._cfg
+            return cfg
 
         # if path is only one segment, just return whatever is there
-        if len(path) == 1:
-            return cfg.get(path[0])
+        # if len(path) == 1:
+        #     return cfg.get(path[0])
 
         # perform merge from root to leaf node
         key = path[-1]  # get last element, this is what we're merging at all levels
@@ -47,7 +90,7 @@ class Config:
         for level in path:
             if not cur_level:
                 # dead end traversing downwards. go with whatever we found last
-                print "Warning: {} is not defined in configuration at {}".format(level, level)
+                print "Warning: {} is not defined in configuration at {}".format(key, level)
                 return cur_val
 
             if key in cur_level:
