@@ -1,6 +1,7 @@
 import unittest
 
 import udo.config
+import udo.util
 
 class TestConfig(unittest.TestCase):
     def setUp(self):
@@ -58,6 +59,11 @@ clusters:
         webapp_root = dev_roles_root.new_root('webapp')
         packages = webapp_root.get('packages')
         self.assertEqual(packages, ['foo-base', 'dev-pkg1', 'dev-pkg2', 'dev-webapp-pkg1'])
+
+    def test_role_config(self):
+        role_config = self.conf.get_role_config('dev', 'webapp')
+        self.assertEqual(role_config.get('tags'), { 'gtag1': 'a', 'gtag2': 'b', 'dtag1': 'c', 'wtag1': 'd' })
+
 
 ###
 
