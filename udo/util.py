@@ -19,22 +19,3 @@ def connection_args():
     return {
         'region': boto.ec2.get_region(_region)
     }
-
-def get_role_config(cluster_name, role_name):
-    # check clusters
-    cluster_config = _cfg.new_root('clusters')
-    if cluster_name not in cluster_config.get():
-        print "Invalid cluster name: {}".format(cluster_name)
-        return
-
-    # check roles
-    roles_config = cluster_config.new_root(cluster_name, 'roles')
-    if not roles_config:
-        print "No roles defined in cluster {}".format(cluster_name)
-        return
-    if role_name not in roles_config.get():
-        print "Invalid role name: {}".format(role_name)
-        return;
-
-    return roles_config.get(role_name)
-

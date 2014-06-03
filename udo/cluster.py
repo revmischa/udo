@@ -3,7 +3,7 @@ import util
 
 from boto.vpc import VPCConnection
 
-_cfg = config.load()
+_cfg = config.Config()
 
 # class method
 def list():
@@ -68,11 +68,12 @@ class Cluster:
     def activate(self):
         vpc = self._get_vpc_by_name(self.name)
         if not vpc:
+            return
             # create VPC
             # ...
 
         # mark that this cluster is being managed by udo
         vpc.add_tag('udo', value=True)
 
-        
+
 

@@ -42,6 +42,9 @@ clusters:
         self.assertEqual(self.conf.get('clusters', 'dev', 'ami'), 'ami-global')
         self.assertEqual(self.conf.get('clusters', 'prod', 'ami'), 'ami-prod')
 
+    def test_leaf(self):
+        self.assertEqual(self.conf.get('tags', 'gtag1'), 'a')
+
     def test_merge_array(self):
         dev_pkgs_expected = [ 'foo-base', 'dev-pkg1', 'dev-pkg2' ];
         dev_pkgs_merged = self.conf.get('clusters', 'dev', 'packages')

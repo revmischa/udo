@@ -1,12 +1,16 @@
 # Sample cluster configuration for AWS
 
+
+# what's your awesome application or company called?
+app_name: myapp
+
+
 # your yum repo that houses your RPMs
 repo:
     # use yum-s3-iam plugin to access our private s3 repo with an instance role
-    plugin: https://s3-us-west-2.amazonaws.com/myapp-pub/provision/yum-plugin-s3-iam-1.0-1.noarch.rpm
+    plugin_url: https://s3-us-west-2.amazonaws.com/myapp-pub/provision/yum-plugin-s3-iam-1.0-1.noarch.rpm
     # yum repo file
     url: https://s3-us-west-2.amazonaws.com/myapp-pub/myapp.repo
-
 
 ### global defaults for all clusters/roles
 region: 'us-west-2'  # what region are we working in here? (Oregon, yo)
