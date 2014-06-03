@@ -3,7 +3,7 @@ Project: *Unemployed DevOps*
 
 You have an application you want to deploy into AWS, taking advantage of all of the cool features and services generously provided by Amazon. You have an interest in doing things the Right Way, and not Reinventing The Wheel. You have some modest level of clue.
 
-Have a look at the [sample configuration](blob/master/config.sample.yml) to get an idea of what Udo
+Have a look at the [sample configuration](config.sample.yml) to get an idea of what Udo
 will manage.
 
 ## Quickstart:  
@@ -47,8 +47,8 @@ If you're using Puppet, Chef, or care about hostnames/IPs, you're almost definit
 
 #### Your job:
 - Describe your architecture in `config.yml`
-- Install your application and configs via RPMs
-- Stick your RPMs in a private S3 repo, authenticate access via [yum-s3-iam](https://github.com/seporaitis/yum-s3-iam)
+- Have some very simple way of setting up your app. One recommendation is to install your application and configs via RPMs, though this is not required
+- If you use RPMs, stick your RPMs in a private S3 repo and authenticate access via [yum-s3-iam](https://github.com/seporaitis/yum-s3-iam)
 
 #### Udo takes care of:
 - LaunchConfigs per role, in a VPC and AutoScaleGroup per cluster
