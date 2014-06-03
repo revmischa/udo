@@ -3,6 +3,8 @@ Project: *Unemployed DevOps*
 
 You have an application you want to deploy into AWS, taking advantage of all of the cool features and services generously provided by Amazon. You have an interest in doing things the Right Way, and not Reinventing The Wheel. You have some modest level of clue.
 
+Have a look at the [sample configuration](blob/master/config.sample.yml) to get an idea of what Udo
+will manage.
 
 ## Quickstart:  
 

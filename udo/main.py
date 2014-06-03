@@ -8,6 +8,7 @@ from pprint import pprint
 
 import cluster
 import launchconfig
+import util
 
 import boto.ec2.autoscale
 from boto.ec2.autoscale import AutoScaleConnection
@@ -67,6 +68,20 @@ class Udo:
         if action == 'cloudinit':
             cloudinit = lc.cloud_init_script()
             print cloudinit
+
+    # for testing features
+    def test(self, *args):
+        args = list(args)
+        if not len(args) or not args[0]:
+            print "test command requires an action. Valid actions are: "
+            print " integrations"
+            return
+        action = args.pop(0)
+
+        if action == 'integrations':
+            util.message_integrations("Testing Udo integrations")
+        else:
+            print "Unknown test command: {}".format(action)
 
 #####
 

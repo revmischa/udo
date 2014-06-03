@@ -45,6 +45,11 @@ clusters:
     def test_leaf(self):
         self.assertEqual(self.conf.get('tags', 'gtag1'), 'a')
 
+    def test_nonexistant(self):
+        self.assertEqual(self.conf.get('does', 'not', 'exist'), None)
+        newroot = self.conf.new_root('fake')
+        self.assertFalse(newroot.get())
+
     def test_merge_array(self):
         dev_pkgs_expected = [ 'foo-base', 'dev-pkg1', 'dev-pkg2' ];
         dev_pkgs_merged = self.conf.get('clusters', 'dev', 'packages')

@@ -18,6 +18,11 @@ ami: 'ami-b99dea89'  # AMI to use for all instances (unless overridden)
 packages:            # common packages to install for all instances
     - 'myapp-base'
 
+# optional: slack integration webhook
+slack:
+    url: https://myapp.slack.com/services/hooks/incoming-webhook?token=Zgasdlgj0ioj30tj
+    username: UdoBot
+    channel: '#notdevops'
 
 # cluster = set of AWS resources managed as a group
 # (instances, RDS, ASgroup, launchconfigs, all in a VPC)

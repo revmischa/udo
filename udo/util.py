@@ -2,6 +2,8 @@
 
 import config
 import boto
+import json
+import urllib2
 
 _cfg = config.Config()
 
@@ -19,3 +21,27 @@ def connection_args():
     return {
         'region': boto.ec2.get_region(_region)
     }
+
+def message_integrations(msg):
+    message_slack(msg)
+
+def message_slack(msg):
+    slack_cfg = _cfg.new_root('slack')
+    if not slack_cfg:
+        # not configured
+        return
+
+    slack_url      = slack_cfg.get('url')
+    slack_username = slack_cfg.get('username')
+    slack_channel  = slack_cfg.get('channel')
+
+    payload = {
+        'username': slack_username,
+        'text': msg,
+        'channel': slack_channel,
+    }
+
+    data = json.dumps(payload)
+    headers = {'Content-Type': 'application/json'}
+    request = urllib2.Request(slack_url, data, headers=headers)
+    return urllib2.urlopen(request).read()

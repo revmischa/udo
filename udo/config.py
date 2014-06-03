@@ -26,7 +26,7 @@ how2use:
 
 # class method
 def load():
-    _path = "config.sample.yml"
+    _path = "config.yml"
     f = open(_path, 'r')
     contents = f.read()
     f.close()
