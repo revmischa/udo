@@ -98,7 +98,7 @@ if __name__ == '__main__':
     if args.action not in dir(Udo):
         if not args.action:
             args.action = ""
-        print "'{}'' is not a valid command".format(args.action)
+        print "'{}' is not a valid command".format(args.action)
         print "\nValid commands are:"
         print " * cluster list"
         print " * lc cloudinit"

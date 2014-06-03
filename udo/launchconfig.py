@@ -33,7 +33,7 @@ class LaunchConfig:
     def cloud_init_script(self):
         # load cloud-init script
         libdir = os.path.dirname(__file__)
-        bootstrap_file = libdir + "/../script/udo-cloudinit.sh"
+        bootstrap_file = libdir + "/../script/cloud-init.sh"
         try:
             bootstrap = open(bootstrap_file).read()
         except IOError as err:
@@ -49,6 +49,12 @@ class LaunchConfig:
         cloud_init_config['role_packages'] = " ".join(self.role_config.get('packages'))
         cloud_init_config['repo_url'] = _cfg.get('repo', 'url')
         cloud_init_config['yum_plugin_url'] = _cfg.get('repo', 'plugin_url')
+
+        # append extra commands from config
+        cloud_init_extra = _cfg.get('cloud_init')
+        if not cloud_init_extra:
+            cloud_init_extra = ''
+        cloud_init_config['cloud_init_extra'] = cloud_init_extra
 
         cloud_init = cloud_init_template.substitute(**cloud_init_config)
         return cloud_init

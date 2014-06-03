@@ -31,5 +31,8 @@ if [[ -n "@role_packages" ]]; then
 	yum install -y @role_packages
 fi
 
+# your stuff from cloud_init config
+@cloud_init_extra
+
 # might not be a bad idea to reboot after updating everything?
 #/sbin/reboot now

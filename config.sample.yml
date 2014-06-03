@@ -24,6 +24,12 @@ slack:
     username: UdoBot
     channel: '#notdevops'
 
+# add some additional cloud-init script commands
+# (see script/cloud-init.sh)
+cloud_init: |
+    touch /root/myapp_init
+    gem install sass
+
 # cluster = set of AWS resources managed as a group
 # (instances, RDS, ASgroup, launchconfigs, all in a VPC)
 clusters:
@@ -36,11 +42,11 @@ clusters:
             - 'myapp-prov-dev'
             - 'myapp-cfg-dev'
         keypair_name: 'dev'
+        subnet_cidr: '10.1.0.0/16'
         # application roles for instances
         # think: sub-clusters that can be managed as distinct sets
         roles:
             webapp:
-                subnet: 'subnet-abcdef123'
                 instance_type: 'm1.medium'
                 scale_policy:
                     min_size: 1
