@@ -4,6 +4,28 @@ Project: *Unemployed DevOps*
 You have an application you want to deploy into AWS, taking advantage of all of the cool features and services generously provided by Amazon. You have an interest in doing things the Right Way, and not Reinventing The Wheel. You have some modest level of clue.
 
 
+## Quickstart:  
+
+#### Configure boto with your AWS credentials
+See: http://boto.readthedocs.org/en/latest/boto_config_tut.html#details
+
+```
+# describe our application clusters
+cp config.sample.yml config.yml
+emacs config.yml   # replace 'emacs' with 'vim' if you are a simple-minded cretin
+
+# view cluster status
+script/udo cluster list
+
+# display our application launchconfig cloud-init script for the dev/webapp role
+script/udo lc cloudinit dev webapp   
+
+# ... more coming
+```
+
+
+## What's all this then, eh?
+
 ### What does Udo do?
 Udo is a small collection of useful tools for managing clusters in AWS. It uses the python `boto` library to communicate with the AWS APIs to automate creation of clusters and instances, making full use of VPCs and AutoScaling Groups.  
 Udo allows you to define your entire operational structure in a straightforward configuration file, and then use command-line tools to bring up clusters and groups of instances.
