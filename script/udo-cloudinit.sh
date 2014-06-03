@@ -22,10 +22,14 @@ yum makecache
 yum update -y
 
 # base system
-yum install -y @base_packages
+if [[ -n "@base_packages" ]]; then
+	yum install -y @base_packages
+fi
 
-# do some fancy stuff here based on tags to decide how to provision
-yum install -y @role_packages
+# role packages
+if [[ -n "@role_packages" ]]; then
+	yum install -y @role_packages
+fi
 
 # might not be a bad idea to reboot after updating everything?
 #/sbin/reboot now
