@@ -41,8 +41,11 @@ If you're making an AMI per role, you may be doing things wrong. You should be a
 If you're using Puppet, Chef, or care about hostnames/IPs, you're almost definitely doing things wrong. You aren't maintaining machines that are going to necessairly exist for any length of time, and you should be able to kill off instances at will as well as spawn and fully provision a new instance from scratch without even thinking about it. There's no real reason you should ever need to keep track of an individual instance.
 
 ### Summary of a proper AWS setup:
-- LaunchConfigs per role, in a VPC per cluster
+#### Your job:
+- Describe your architecture in `config.yml`
 - Install your application and configs via RPMs
-- Stick your RPMs in a private S3 repo, authenticate access via yum-s3-iam
-- Apply tags to instances per role, so they can know what RPMs to install to provision themselves
-- Use the Udo cloud-init script to provision instances
+- Stick your RPMs in a private S3 repo, authenticate access via [yum-s3-iam](https://github.com/seporaitis/yum-s3-iam)
+#### Udo takes care of:
+- LaunchConfigs per role, in a VPC and AutoScaleGroup per cluster
+- Apply tags to instances per role, so they can know what RPMs to install
+- Use a cloud-init script to provision instances via RPMs
