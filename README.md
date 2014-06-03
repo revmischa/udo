@@ -34,15 +34,15 @@ script/udo lc cloudinit dev webapp
 
 ### What does Udo do?
 Udo is a small collection of useful tools for managing clusters in AWS. It uses the python `boto` library to communicate with the AWS APIs to automate creation of clusters and instances, making full use of VPCs and AutoScaling Groups.  
-Udo allows you to define your entire operational structure in a straightforward configuration file, and then use command-line tools to bring up clusters and groups of instances.
+Udo allows you to define your entire operational structure in a straightforward configuration file, and then use the Udo command-line tool to bring up and manage clusters and groups of instances. It takes the tedious work out of creating nearly identical clusters by hand, and automates actions like viewing cluster and role statuses, parallelizing SSH commands, and performing graceful upgrades of instances in an autoscale group without downtime.
 
 ### What do _you_ do?
-Most development projects utilize several distinct sets of environments, such as dev, qa, stage, production. These clusters are generally partitioned into different roles, such as a web application server, asynchronous worker machine, monitoring.  
+Most development projects utilize several distinct sets of environments, such as dev, qa, stage, production. These clusters are generally partitioned into different roles, such as a web application server, asynchronous worker machine, monitoring and so on.  
 If you wish to set this up in AWS, you should script creating environments, provisioning instances based on roles and creating different parameters for each type of instance you want ("dev webapp servers should be of type m3.medium", "production workers should use an autoscaling policy with a minimum of 3 instances", etc..).
 You *could* do all of this work yourself, or you could just use Udo.
 
 ### What _should_ you do?
-EC2 is not a datacenter in the cloud. If you're using it like a traditional managed hosting company, you are probably doing things wrong. You should take advantage of the specialized infrastucture and APIs provided by AWS, like AutoScaling Groups and `boto`.  
+EC2 is not a datacenter in ~the cloud~. If you're using it like a traditional managed hosting company, you are probably doing things wrong. You should take advantage of the specialized infrastucture and APIs provided by AWS, like AutoScaling Groups and `boto`.  
 If you're making an AMI per role, you may be doing things wrong. You should be able to automatically deploy your entire application onto a virgin Amazon Linux AMI, though making one with some of your app already installed to save time isn't a bad idea.
 If you're using Puppet, Chef, or care about hostnames/IPs, you're almost definitely doing things wrong. You aren't maintaining machines that are going to necessairly exist for any length of time, and you should be able to kill off instances at will as well as spawn and fully provision a new instance from scratch without even thinking about it. There's no real reason you should ever need to keep track of an individual instance.
 
