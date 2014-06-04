@@ -30,8 +30,10 @@ def confirm(msg):
         return True
     return False
 
+# also prints out msg
 def message_integrations(msg):
     message_slack(msg)
+    print msg
 
 def message_slack(msg):
     slack_cfg = _cfg.new_root('slack')

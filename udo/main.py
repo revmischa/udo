@@ -70,7 +70,7 @@ class Udo:
             print cloudinit
         elif action == 'activate':
             if lc.activate():
-                print "Activated {}/{}".format(cluster, role)
+                util.message_integrations("Activated {}/{}".format(cluster, role))
         else:
             print "Unrecognized launchconfig action"
 
@@ -94,23 +94,27 @@ class Udo:
 if __name__ == '__main__':
     # argument parsing
     parser = argparse.ArgumentParser(description='Manage AWS clusters.')
-    parser.add_argument('action', metavar='action', type=str, nargs='?',
+    parser.add_argument('cmd', metavar='command', type=str, nargs='?',
                        help='Action to perform. Valid actions: status.')
-    parser.add_argument('action_args', metavar='args', type=str, nargs='*',
-                       help='Additional arguments for action.')
+    parser.add_argument('cmd_args', metavar='args', type=str, nargs='*',
+                       help='Additional arguments for command.')
     args = parser.parse_args()
     
-    if args.action not in dir(Udo):
-        if not args.action:
-            args.action = ""
-        print "'{}' is not a valid command".format(args.action)
-        print "\nValid commands are:"
-        print " * cluster list"
-        print " * lc cloudinit (cluster) (role)"
-        print " * lc activate (cluster) (role)"
+    if args.cmd not in dir(Udo):
+        if not args.cmd:
+            args.cmd = ""
+        print "'{}' is not a valid command".format(args.cmd)
+        print """
+Valid commands are:
+  * cluster list - view state of clusters
+  * lc cloudinit (cluster) (role) - display cloud-init script
+  * lc activate (cluster) (role) - create a launch configuration
+  * as list - list autoscaling groups
+  * as activate (cluster) (role) - create an autoscaling group
+        """
         sys.exit(1)
 
-    # execute action
+    # execute cmd
     exe = Udo()
-    method = getattr(exe, args.action)
-    method(*args.action_args)
+    method = getattr(exe, args.cmd)
+    method(*args.cmd_args)
