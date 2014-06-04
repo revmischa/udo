@@ -14,7 +14,7 @@ repo:
 
 ### global defaults for all clusters/roles
 region: 'us-west-2'  # what region are we working in here? (Oregon, yo)
-ami: 'ami-b99dea89'  # AMI to use for all instances (unless overridden)
+ami: 'ami-a99deb89'  # AMI to use for all instances (unless overridden)
 packages:            # common packages to install for all instances
     - 'myapp-base'
 
@@ -31,7 +31,7 @@ cloud_init: |
     gem install sass
 
 # cluster = set of AWS resources managed as a group
-# (instances, RDS, ASgroup, launchconfigs, all in a VPC)
+# (instances, ASgroup, launchconfigs, all in a VPC)
 clusters:
     # create a "development" cluster
     dev:
@@ -43,6 +43,8 @@ clusters:
             - 'myapp-cfg-dev'
         keypair_name: 'dev'
         subnet_cidr: '10.1.0.0/16'
+        # for instance roles
+        iam_profile: 'developer'
         # application roles for instances
         # think: sub-clusters that can be managed as distinct sets
         roles:

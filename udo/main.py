@@ -68,6 +68,11 @@ class Udo:
         if action == 'cloudinit':
             cloudinit = lc.cloud_init_script()
             print cloudinit
+        elif action == 'activate':
+            if lc.activate():
+                print "Activated {}/{}".format(cluster, role)
+        else:
+            print "Unrecognized launchconfig action"
 
     # for testing features
     def test(self, *args):
@@ -101,7 +106,8 @@ if __name__ == '__main__':
         print "'{}' is not a valid command".format(args.action)
         print "\nValid commands are:"
         print " * cluster list"
-        print " * lc cloudinit"
+        print " * lc cloudinit (cluster) (role)"
+        print " * lc activate (cluster) (role)"
         sys.exit(1)
 
     # execute action
