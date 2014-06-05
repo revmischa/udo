@@ -59,7 +59,15 @@ class LaunchConfig:
         cloud_init = cloud_init_template.substitute(**cloud_init_config)
         return cloud_init
 
+    # does a LC exist with our name?
+    def exists(self):
+        lcs = conn.get_all_launch_configurations(names = [self.name()])
+        if len(lcs):
+            return True
+        return False
+
     # creates the LaunchConfig
+    # returns True if LC exists
     def activate(self):
         conn = as_conn()
         conn = boto.ec2.autoscale.connect_to_region('us-west-2')
@@ -67,10 +75,9 @@ class LaunchConfig:
         name = self.name()
 
         # check if this LC already exists
-        lcs = conn.get_all_launch_configurations(names = [name])
-        if len(lcs):
+        if self.exists():
             if not util.confirm("LaunchConfiguration {} already exists, overwrite? (y/n) ".format(name)):
-                return
+                return True
             # delete existing
             conn.delete_launch_configuration(name)
 
@@ -88,6 +95,7 @@ class LaunchConfig:
         )
         if not conn.create_launch_configuration(lc):
             print "Error creating launch configuration {}".format(name)
+            return False
 
         return lc
 

@@ -1,5 +1,6 @@
 import config
 import util
+import launchconfig
 
 from pprint import pprint
 
@@ -25,6 +26,28 @@ class LaunchConfig:
     def name(self):
         return "-".join([self.cluster_name, self.role_name])
 
+    def exists(self):
+        ags = conn.get_all_groups(names = [self.name()])
+        if len(ags):
+            return True
+        return False
+
+    # returns LaunchConfig for this ASgroup
+    # may or may not exist
+    def lc(self):
+        lc = launchconfig.LaunchConfig(self.cluster_name, self.role_name)
+        return lc
+
+    # returns true if the LC exists
+    def activate_lc(self):
+        # make sure we have a launchconfig activated
+        lc = self.lc()
+        if lc.exists():
+            print "Using LaunchConfig {}".format(lc.name())
+            return True
+        print "Creating LaunchConfig {}".format(lc.name())
+        return lc.activate()
+
     # creates the LaunchConfig
     def activate(self):
         conn = as_conn()
@@ -32,28 +55,12 @@ class LaunchConfig:
 
         name = self.name()
 
-        # check if this LC already exists
-        lcs = conn.get_all_launch_configurations(names = [name])
-        if len(lcs):
-            if not util.confirm("LaunchConfiguration {} already exists, overwrite? (y/n) ".format(name)):
-                return
-            # delete existing
-            conn.delete_launch_configuration(name)
+        # ensure this LC already exists
+        if not self.activate_lc():
+            return False
 
-        # get configuration for this LC
-        cfg = self.role_config
-        lc = LaunchConfiguration(
-            name = name,
-            image_id = cfg.get('ami'),
-            instance_profile_name = cfg.get('iam_profile'),
-            instance_type = cfg.get('instance_type'),
-            security_groups = cfg.get('security_groups'),
-            key_name = cfg.get('keypair_name'),
-            user_data = self.cloud_init_script(),
-            associate_public_ip_address = True,  # this is required for your shit to actually work
-        )
-        if not conn.create_launch_configuration(lc):
-            print "Error creating launch configuration {}".format(name)
+        # does the ASgroup already exist?
+
 
         return lc
 
