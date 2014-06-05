@@ -12,16 +12,12 @@ from boto.ec2.autoscale import Tag
 
 _cfg = config.Config()
 
-def as_conn():
-    args = util.connection_args()
-    return boto.ec2.autoscale.AutoScaleConnection(**args)
-
-class LaunchConfig:
+class AutoscaleGroup:
     def __init__(self, cluster_name, role_name):
         self.cluster_name = cluster_name
         self.role_name = role_name
         self.role_config = _cfg.get_role_config(cluster_name, role_name)
-        self.conn = as_conn()
+        self.conn = util.as_conn()
 
     def name(self):
         return "-".join([self.cluster_name, self.role_name])
@@ -50,8 +46,7 @@ class LaunchConfig:
 
     # creates the LaunchConfig
     def activate(self):
-        conn = as_conn()
-        conn = boto.ec2.autoscale.connect_to_region('us-west-2')
+        conn = util.as_conn()
 
         name = self.name()
 
@@ -60,7 +55,23 @@ class LaunchConfig:
             return False
 
         # does the ASgroup already exist?
+        cfg = self.role_config
+        print "AZs: {}".format(cfg.get('availability_zones'))
+        ag = AutoScalingGroup(
+            group_name=self.name(),
+            load_balancers=cfg.get('elbs'),
+            availability_zones=cfg.get('availability_zones'),
+            vpc_zone_identifier=cfg.get('subnet'),
+            launch_config=self.lc().name(),
+            desired_capacity=cfg.get('scale_policy', 'desired'),
+            min_size=cfg.get('scale_policy', 'min_size'),
+            max_size=cfg.get('scale_policy', 'max_size'),
+        )
+        pprint(ag)
+        if not conn.create_auto_scaling_group(ag):
+            print "Failed to create autoscale group"
+            return False
 
+        return ag
 
-        return lc
 

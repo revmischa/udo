@@ -18,9 +18,16 @@ def connection_args():
         print "Warning: default region is not configured"
         return "us-east-1"
 
-    return {
+    args = {
         'region': boto.ec2.get_region(_region)
     }
+    return args
+
+# autoscale connection
+def as_conn():
+    args = connection_args()
+    region = args.pop('region')
+    return boto.ec2.autoscale.connect_to_region(region.name, **args)
 
 # ask a yes/no question
 # returns true/false

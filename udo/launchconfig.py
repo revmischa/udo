@@ -12,10 +12,6 @@ from boto.ec2.autoscale import LaunchConfiguration
 
 _cfg = config.Config()
 
-def as_conn():
-    args = util.connection_args()
-    return boto.ec2.autoscale.AutoScaleConnection(**args)
-
 class LCTemplate(Template):
     delimiter = '@'
 
@@ -24,7 +20,7 @@ class LaunchConfig:
         self.cluster_name = cluster_name
         self.role_name = role_name
         self.role_config = _cfg.get_role_config(cluster_name, role_name)
-        self.conn = as_conn()
+        self.conn = util.as_conn()
 
     def name(self):
         return "-".join([self.cluster_name, self.role_name])
@@ -61,6 +57,7 @@ class LaunchConfig:
 
     # does a LC exist with our name?
     def exists(self):
+        conn = util.as_conn()
         lcs = conn.get_all_launch_configurations(names = [self.name()])
         if len(lcs):
             return True
@@ -69,7 +66,7 @@ class LaunchConfig:
     # creates the LaunchConfig
     # returns True if LC exists
     def activate(self):
-        conn = as_conn()
+        conn = util.as_conn()
         conn = boto.ec2.autoscale.connect_to_region('us-west-2')
 
         name = self.name()

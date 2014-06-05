@@ -33,6 +33,8 @@ cloud_init: |
 # cluster = set of AWS resources managed as a group
 # (instances, ASgroup, launchconfigs, all in a VPC)
 clusters:
+    availability_zones:
+        - 'us-west-2a'
     # create a "development" cluster
     dev:
         # human-readable name
@@ -42,7 +44,7 @@ clusters:
             - 'myapp-prov-dev'
             - 'myapp-cfg-dev'
         keypair_name: 'dev'
-        subnet_cidr: '10.1.0.0/16'
+        subnet: 'subnet-aabbccdd'
         # for instance roles
         iam_profile: 'developer'
         # application roles for instances

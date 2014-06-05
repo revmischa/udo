@@ -9,6 +9,7 @@ from pprint import pprint
 import cluster
 import launchconfig
 import util
+import asgroup
 
 import boto.ec2.autoscale
 from boto.ec2.autoscale import AutoScaleConnection
@@ -44,12 +45,14 @@ class Udo:
                 print "Unknown cluster command: {}".format(action)
         return
 
+
     # launchconfig
     def lc(self, *args):
         args = list(args)
         if not len(args) or not args[0]:
             print "launchconfig command requires an action. Valid actions are: "
             print " cloudinit (cluster) (role) - view cloud_init bootstrap script"
+            print " activate (cluster) (role) - create launch configuration"
             return
         action = args.pop(0)
 
@@ -73,6 +76,35 @@ class Udo:
                 util.message_integrations("Activated {}/{}".format(cluster, role))
         else:
             print "Unrecognized launchconfig action"
+
+
+    # autoscale
+    def asgroup(self, *args):
+        args = list(args)
+        if not len(args) or not args[0]:
+            print "asgroup command requires an action. Valid actions are: "
+            print " activate (cluster) (role) - create an autoscale group"
+            return
+        action = args.pop(0)
+
+        # need cluster/role
+        if len(args) < 2:
+            print "Please specify cluster and role for any asgroup command"
+            return
+        cluster = args.pop(0)
+        role = args.pop(0)
+        if not cluster or not role:
+            print "launchconfig command requires a cluster and a role"
+            return
+
+        ag = asgroup.AutoscaleGroup(cluster, role)
+
+        if action == 'activate':
+            if ag.activate():
+                util.message_integrations("Activated {}/{}".format(cluster, role))
+        else:
+            print "Unrecognized asgroup action"
+
 
     # for testing features
     def test(self, *args):
@@ -109,8 +141,8 @@ Valid commands are:
   * cluster list - view state of clusters
   * lc cloudinit (cluster) (role) - display cloud-init script
   * lc activate (cluster) (role) - create a launch configuration
-  * as list - list autoscaling groups
-  * as activate (cluster) (role) - create an autoscaling group
+  * asgroup list - list autoscaling groups
+  * asgroup activate (cluster) (role) - create an autoscaling group
         """
         sys.exit(1)
 
