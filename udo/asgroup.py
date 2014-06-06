@@ -128,14 +128,14 @@ class AutoscaleGroup:
         tags = cfg.get('tags')
         if not tags:
             tags = {}
-        tags['cluster'] = cluster_name
-        tags['role'] = role_name
+        tags['cluster'] = self.cluster_name
+        tags['role'] = self.role_name
 
         # apply tags        
         tag_set = [self.ag_tag(ag, k,v) for (k,v) in tags.iteritems()]
         conn.create_or_update_tags(tag_set)
 
-        util.message_integrations("Activated {} ASgroup".format(name))
+        util.message_integrations("Activated ASgroup {}".format(name))
 
         return ag
 

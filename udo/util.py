@@ -48,7 +48,6 @@ def retry(proc, timeout):
     ret = None
     while success == False:
         try:
-            print "\n"
             ret = proc()     
             success = True
         except boto.exception.BotoServerError:
