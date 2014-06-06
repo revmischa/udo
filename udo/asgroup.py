@@ -4,7 +4,6 @@ import launchconfig
 import cluster
 
 from pprint import pprint
-from time import sleep
 
 import boto
 from boto.ec2.autoscale import AutoScaleConnection
@@ -76,7 +75,7 @@ class AutoscaleGroup:
         if not util.confirm("Are you sure you want to tear down the {} ASgroup and recreate it?".format(self.name())):
             return
         self.deactivate()
-        self.activate()
+        util.retry(lambda: self.activate(), 60)
 
     def deactivate(self):
         if not self.exists():
@@ -87,17 +86,11 @@ class AutoscaleGroup:
         ag.desired_capacity = 0
         ag.update()
         ag.shutdown_instances()
-        print "Deleting... this may take a few minutes."
-        sleep(40)
-        deleted = False
-        while deleted == False:
-            try:
-                ag.delete()
-                util.message_integrations("AS group {} deleted".format(self.name()))
-                deleted = True
-            except boto.exception.BotoServerError:
-                print "Still waiting..."
-                sleep(10)
+        print "Deleting... this may take a few minutes..."
+        if util.retry(lambda: ag.delete(), 500):
+            util.message_integrations("ASgroup {} deleted".format(self.name()))
+        else:
+            util.message_integrations("Failed to delete ASgroup {}".format(self.name()))
 
     # creates the LaunchConfig
     def activate(self):
@@ -131,8 +124,20 @@ class AutoscaleGroup:
             print "Failed to create autoscale group"
             return False
 
-        util.message_integrations("Activated {} autoscale group".format(name))
+        # apply tags
+        tags = cfg.get('tags')
+        if tags:
+            tag_set = [self.ag_tag(ag, k,v) for (k,v) in tags.iteritems()]
+            conn.create_or_update_tags(tag_set)
+
+        util.message_integrations("Activated {} ASgroup".format(name))
 
         return ag
 
-
+    def ag_tag(self, ag, k, v):
+        return Tag(
+            key=k,
+            value=v,
+            propagate_at_launch=True,
+            resource_id=ag.name()
+        )

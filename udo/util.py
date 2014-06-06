@@ -4,6 +4,8 @@ import config
 import boto
 import json
 import urllib2
+from time import sleep
+import sys
 
 _cfg = config.Config()
 
@@ -36,6 +38,23 @@ def confirm(msg):
     if yn.lower() == 'y':
         return True
     return False
+
+# keep trying proc until timeout or no exception is thrown
+# use this when you're waiting for a change to take effect
+# FIXME: actually respect timeout
+def retry(proc, timeout):
+    success = False
+    ret = None
+    while success == False:
+        try:
+            ret = proc()     
+            success = True
+        except boto.exception.BotoServerError:
+            print('.'),
+            sys.stdout.flush()
+            sleep(5)
+    return ret
+
 
 # also prints out msg
 def message_integrations(msg):
