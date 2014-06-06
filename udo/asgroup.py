@@ -124,12 +124,13 @@ class AutoscaleGroup:
             print "Failed to create autoscale group"
             return False
 
-        # get instance tags
+        # prepare instance tags
         tags = cfg.get('tags')
         if not tags:
             tags = {}
         tags['cluster'] = self.cluster_name
         tags['role'] = self.role_name
+        tags['Name'] = self.name()
 
         # apply tags        
         tag_set = [self.ag_tag(ag, k,v) for (k,v) in tags.iteritems()]
