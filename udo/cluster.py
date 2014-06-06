@@ -22,6 +22,21 @@ def vpc_conn():
     args = util.connection_args()
     return VPCConnection(**args)
 
+def get_vpc_by_name(name):
+    vpcs = vpc_conn().get_all_vpcs()
+    ret = None
+    for vpc in vpcs:
+        tags = vpc.tags
+        if 'Name' not in tags:
+            continue
+        vpc_name = tags.get('Name')
+        if vpc_name == name:
+            # duplicate?
+            if ret:
+                print "Warning: found more than one VPC with the name {}".format(name)
+            ret = vpc
+    return ret
+
 class Cluster:
     def __init__(self, name):    
         if name not in _cfg.get('clusters'):
@@ -31,23 +46,8 @@ class Cluster:
         self.name = name
         self.conn = vpc_conn()
 
-    def _get_vpc_by_name(self, name):
-        vpcs = self.conn.get_all_vpcs()
-        ret = None
-        for vpc in vpcs:
-            tags = vpc.tags
-            if 'Name' not in tags:
-                continue
-            vpc_name = tags.get('Name')
-            if vpc_name == name:
-                # duplicate?
-                if ret:
-                    print "Warning: found more than one VPC with the name {}".format(name)
-                ret = vpc
-        return ret
-
     def status(self):
-        vpc = self._get_vpc_by_name(self.name)
+        vpc = get_vpc_by_name(self.name)
         if not vpc:
             return { 'exists': False }
 
@@ -64,16 +64,37 @@ class Cluster:
             'id': vpc.id
         }
     
-    # active this cluster, bring up VPC and ASgroups, configure launchconfigs
+    # active this cluster
     def activate(self):
+        conn = vpc_conn()
+
+        cfg = _cfg.get('clusters', self.name)
+        if not cfg:
+            print "No configuration found for {}".format(self.name)
+            return False
+
         vpc = self._get_vpc_by_name(self.name)
-        if not vpc:
+        if vpc:
+            print "Cluster {} already exists".format(self.name)
             return
-            # create VPC
-            # ...
+
+        # create VPC
+        subnet_cidr = cfg.get('subnet_cidr')
+        if not subnet_cidr:
+            print "No subnet definition found for {}".format(self.name)
+            return False
+        vpc = conn.create_vpc(subnet_cidr)
+        vpc.add_tag('Name', value=self.name)
+        # for now assume that our subnet is the same CIDR as the VPC
+        # this is simpler but less fancy
+        subnet = conn.create_subnet(vpc.id, subnet_cidr)
+        # all done
+        util.message_integrations("Created VPC {}".format(self.name))
 
         # mark that this cluster is being managed by udo
         vpc.add_tag('udo', value=True)
+
+        return True
 
 
 

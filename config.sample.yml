@@ -14,6 +14,8 @@ repo:
 
 ### global defaults for all clusters/roles
 region: 'us-west-2'  # what region are we working in here? (Oregon, yo)
+availability_zones:
+    - 'us-west-2a'
 ami: 'ami-a99deb89'  # AMI to use for all instances (unless overridden)
 packages:            # common packages to install for all instances
     - 'myapp-base'
@@ -33,8 +35,6 @@ cloud_init: |
 # cluster = set of AWS resources managed as a group
 # (instances, ASgroup, launchconfigs, all in a VPC)
 clusters:
-    availability_zones:
-        - 'us-west-2a'
     # create a "development" cluster
     dev:
         # human-readable name
@@ -44,7 +44,7 @@ clusters:
             - 'myapp-prov-dev'
             - 'myapp-cfg-dev'
         keypair_name: 'dev'
-        subnet: 'subnet-aabbccdd'
+        subnet_cidr: '10.1.0.0/16'
         # for instance roles
         iam_profile: 'developer'
         # application roles for instances

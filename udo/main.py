@@ -41,9 +41,11 @@ class Udo:
             cl = cluster.Cluster(cluster_name)
             if action == 'status':
                 print "{} status: {}".format(cluster_name, cl.status())
+            elif action == 'activate':
+                if not cl.activate():
+                    print "Failed to bring up {} cluster".format(cluster_name)
             else:
                 print "Unknown cluster command: {}".format(action)
-        return
 
 
     # launchconfig
@@ -72,8 +74,7 @@ class Udo:
             cloudinit = lc.cloud_init_script()
             print cloudinit
         elif action == 'activate':
-            if lc.activate():
-                util.message_integrations("Activated {}/{}".format(cluster, role))
+            if lc.activate()
         else:
             print "Unrecognized launchconfig action"
 
@@ -100,8 +101,9 @@ class Udo:
         ag = asgroup.AutoscaleGroup(cluster, role)
 
         if action == 'activate':
-            if ag.activate():
-                util.message_integrations("Activated {}/{}".format(cluster, role))
+            ag.activate()
+        elif action == 'deactivate':
+            ag.deactivate()
         else:
             print "Unrecognized asgroup action"
 
@@ -139,6 +141,8 @@ if __name__ == '__main__':
         print """
 Valid commands are:
   * cluster list - view state of clusters
+  * cluster status (cluster) - view state of a cluster
+  * cluster activate (cluster) - create a VPC
   * lc cloudinit (cluster) (role) - display cloud-init script
   * lc activate (cluster) (role) - create a launch configuration
   * asgroup list - list autoscaling groups

@@ -1,5 +1,6 @@
 import config
 import util
+import cluster
 
 import os
 import sys
@@ -93,6 +94,8 @@ class LaunchConfig:
         if not conn.create_launch_configuration(lc):
             print "Error creating launch configuration {}".format(name)
             return False
+
+        util.message_integrations("Activated {}".format(name))
 
         return lc
 

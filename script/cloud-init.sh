@@ -23,12 +23,12 @@ yum update -y
 
 # base system
 if [[ -n "@base_packages" ]]; then
-	yum install -y @base_packages
+    yum install -y @base_packages
 fi
 
 # role packages
 if [[ -n "@role_packages" ]]; then
-	yum install -y @role_packages
+    yum install -y @role_packages
 fi
 
 # your stuff from cloud_init config
