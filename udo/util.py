@@ -37,6 +37,7 @@ def confirm(msg):
     yn = raw_input(msg + " ")
     if yn.lower() == 'y':
         return True
+    print "Aborted"
     return False
 
 # keep trying proc until timeout or no exception is thrown
@@ -47,12 +48,14 @@ def retry(proc, timeout):
     ret = None
     while success == False:
         try:
+            print "\n"
             ret = proc()     
             success = True
         except boto.exception.BotoServerError:
             print('.'),
             sys.stdout.flush()
             sleep(5)
+    print "\n"
     return ret
 
 

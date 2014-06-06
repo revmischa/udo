@@ -139,5 +139,5 @@ class AutoscaleGroup:
             key=k,
             value=v,
             propagate_at_launch=True,
-            resource_id=ag.name()
+            resource_id=ag.name
         )
