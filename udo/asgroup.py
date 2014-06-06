@@ -71,6 +71,13 @@ class AutoscaleGroup:
             return None
         return ags[0]
 
+    # kill of ASgroup and recreate it
+    def reload(self):
+        if not util.confirm("Are you sure you want to tear down the {} ASgroup and recreate it?".format(self.name())):
+            return
+        self.deactivate()
+        self.activate()
+
     def deactivate(self):
         if not self.exists():
             return

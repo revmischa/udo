@@ -88,6 +88,8 @@ class Udo:
             return
         action = args.pop(0)
 
+        # TODO: hook up 'list'
+
         # need cluster/role
         if len(args) < 2:
             print "Please specify cluster and role for any asgroup command"
@@ -104,6 +106,8 @@ class Udo:
             ag.activate()
         elif action == 'deactivate':
             ag.deactivate()
+        elif action == 'reload':
+            ag.reload()
         else:
             print "Unrecognized asgroup action"
 
@@ -145,8 +149,9 @@ Valid commands are:
   * cluster activate (cluster) - create a VPC
   * lc cloudinit (cluster) (role) - display cloud-init script
   * lc activate (cluster) (role) - create a launch configuration
-  * asgroup list - list autoscaling groups
+  * asgroup reload (cluster) (role) - deactivate and activate an autoscaling group to update the config
   * asgroup activate (cluster) (role) - create an autoscaling group
+  * asgroup deactivate (cluster) (role) - delete an autoscaling group
         """
         sys.exit(1)
 

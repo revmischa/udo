@@ -32,7 +32,7 @@ def as_conn():
 # ask a yes/no question
 # returns true/false
 def confirm(msg):
-    yn = raw_input(msg)
+    yn = raw_input(msg + " ")
     if yn.lower() == 'y':
         return True
     return False
