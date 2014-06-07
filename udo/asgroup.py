@@ -110,6 +110,8 @@ class AutoscaleGroup:
         if not subnet:
             print "Subnet CIDR is required for {}/{}".format(self.cluster_name, self.role_name)
             return False
+        print "Using subnet {}".format(subnet.id)
+        print "AZs: {}".format(cfg.get('availability_zones'))
 
         # does the ASgroup already exist?
         ag = AutoScalingGroup(
