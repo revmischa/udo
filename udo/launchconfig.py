@@ -90,7 +90,7 @@ class LaunchConfig:
 
         # check if this LC already exists
         if self.exists():
-            if not util.confirm("LaunchConfig {} already exists, overwrite? (y/n) ".format(name)):
+            if not util.confirm("LaunchConfig {} already exists, overwrite?".format(name)):
                 return True
             # delete existing
             conn.delete_launch_configuration(name)
