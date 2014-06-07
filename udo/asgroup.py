@@ -107,11 +107,11 @@ class AutoscaleGroup:
             return False
 
         # look up subnet id
-        subnet = self.find_vpc_subnet_by_cidr(cfg.get('subnet_cidr'))
-        if not subnet:
+        subnets = [self.find_vpc_subnet_by_cidr(cidr) for cidr in cfg.get('subnets_cidr')]
+        if not subnets or not len(subnets):
             print "Subnet CIDR is required for {}/{}".format(self.cluster_name, self.role_name)
             return False
-        print "Using subnet {}".format(subnet.id)
+        print "Using subnets {}".format(", ".join([s.id for s in subnets]))
         print "AZs: {}".format(cfg.get('availability_zones'))
 
         # does the ASgroup already exist?
@@ -119,7 +119,7 @@ class AutoscaleGroup:
             group_name=self.name(),
             load_balancers=cfg.get('elbs'),
             availability_zones=cfg.get('availability_zones'),
-            vpc_zone_identifier=subnet.id,
+            vpc_zone_identifier=[s.id for s in subnets],
             launch_config=self.lc().name(),
             desired_capacity=cfg.get('scale_policy', 'desired'),
             min_size=cfg.get('scale_policy', 'min_size'),

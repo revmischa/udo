@@ -50,8 +50,9 @@ def retry(proc, timeout):
         try:
             ret = proc()     
             success = True
-        except boto.exception.BotoServerError:
-            print('.'),
+        except boto.exception.BotoServerError as e:
+            print "Error: {}, retrying...".format(e)
+            #print('.'),
             sys.stdout.flush()
             sleep(5)
     print "\n"

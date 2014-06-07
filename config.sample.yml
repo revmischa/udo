@@ -44,7 +44,9 @@ clusters:
             - 'myapp-prov-dev'
             - 'myapp-cfg-dev'
         keypair_name: 'dev'
-        subnet_cidr: '10.1.0.0/16'
+        subnets_cidr: 
+            - '10.10.0.0/16'
+            - '10.20.0.0/16'
         # for instance roles
         iam_profile: 'developer'
         # application roles for instances
