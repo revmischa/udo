@@ -74,6 +74,7 @@ class AutoscaleGroup:
     def reload(self):
         if not util.confirm("Are you sure you want to tear down the {} ASgroup and recreate it?".format(self.name())):
             return
+        util.message_integrations("Reloading ASgroup {}".format(self.name()))
         self.deactivate()
         util.retry(lambda: self.activate(), 60)
 
