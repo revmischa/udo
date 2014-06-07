@@ -73,7 +73,7 @@ class Cluster:
             print "No configuration found for {}".format(self.name)
             return False
 
-        vpc = self._get_vpc_by_name(self.name)
+        vpc = get_vpc_by_name(self.name)
         if vpc:
             print "Cluster {} already exists".format(self.name)
             return
