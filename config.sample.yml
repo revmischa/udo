@@ -20,6 +20,10 @@ ami: 'ami-a99deb89'  # AMI to use for all instances (unless overridden)
 packages:            # common packages to install for all instances
     - 'myapp-base'
 
+# display extra API call information
+# useful if you want to find out why something is failing
+debug: 0
+
 # optional: slack integration webhook
 slack:
     url: https://myapp.slack.com/services/hooks/incoming-webhook?token=Zgasdlgj0ioj30tj
