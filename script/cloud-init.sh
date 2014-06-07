@@ -21,18 +21,20 @@ yum makecache
 # install updates
 yum update -y
 
+# your stuff from cloud_init config
+@cloud_init_extra
+
+## install packages
 # base system
 if [[ -n "@base_packages" ]]; then
     yum install -y @base_packages
 fi
-
 # role packages
 if [[ -n "@role_packages" ]]; then
     yum install -y @role_packages
 fi
 
-# your stuff from cloud_init config
-@cloud_init_extra
+
 
 # might not be a bad idea to reboot after updating everything?
 #/sbin/reboot now
