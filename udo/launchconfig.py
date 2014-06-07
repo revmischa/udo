@@ -58,11 +58,27 @@ class LaunchConfig:
 
     # does a LC exist with our name?
     def exists(self):
-        conn = util.as_conn()
-        lcs = conn.get_all_launch_configurations(names = [self.name()])
-        if len(lcs):
+        lc = self.get_lc()
+        if lc:
             return True
         return False
+
+    def get_lc(self):
+        conn = util.as_conn()
+        lcs = conn.get_all_launch_configurations(names = [self.name()])
+        if not len(lcs):
+            return None
+        return lcs[0]
+
+    def deactivate(self):
+        if not self.exists():
+            return
+        print "Deleting launchconfig..."
+        lc = self.get_lc()
+        if util.retry(lambda: lc.delete(), 500):
+            util.message_integrations("Deleted LaunchConfig {}".format(self.name()))
+        else:
+            util.message_integrations("Failed to delete LaunchConfig {}".format(self.name()))
 
     # creates the LaunchConfig
     # returns True if LC exists
@@ -74,7 +90,7 @@ class LaunchConfig:
 
         # check if this LC already exists
         if self.exists():
-            if not util.confirm("LaunchConfiguration {} already exists, overwrite? (y/n) ".format(name)):
+            if not util.confirm("LaunchConfig {} already exists, overwrite? (y/n) ".format(name)):
                 return True
             # delete existing
             conn.delete_launch_configuration(name)
@@ -92,10 +108,10 @@ class LaunchConfig:
             associate_public_ip_address = True,  # this is required for your shit to actually work
         )
         if not conn.create_launch_configuration(lc):
-            print "Error creating launch configuration {}".format(name)
+            print "Error creating LaunchConfig {}".format(name)
             return False
 
-        util.message_integrations("Activated {}".format(name))
+        util.message_integrations("Activated LaunchConfig {}".format(name))
 
         return lc
 

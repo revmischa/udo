@@ -88,7 +88,10 @@ class AutoscaleGroup:
         ag.shutdown_instances()
         print "Deleting... this may take a few minutes..."
         if util.retry(lambda: ag.delete(), 500):
-            util.message_integrations("ASgroup {} deleted".format(self.name()))
+            util.message_integrations("Deleted ASgroup {}".format(self.name()))
+            # delete launchconfig too
+            lc = self.lc()
+            lc.deactivate()
         else:
             util.message_integrations("Failed to delete ASgroup {}".format(self.name()))
 
