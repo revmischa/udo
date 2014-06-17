@@ -10,6 +10,7 @@ import cluster
 import launchconfig
 import util
 import asgroup
+import config
 
 import boto.ec2.autoscale
 from boto.ec2.autoscale import AutoScaleConnection
@@ -55,6 +56,7 @@ class Udo:
             print "launchconfig command requires an action. Valid actions are: "
             print " cloudinit (cluster) (role) - view cloud_init bootstrap script"
             print " activate (cluster) (role) - create launch configuration"
+            print " deactivate (cluster) (role) - delete launch configuration"
             return
         action = args.pop(0)
 
@@ -75,8 +77,8 @@ class Udo:
             print cloudinit
         elif action == 'activate':
             lc.activate()
-        elif action == 'update':
-            lc.update()
+        elif action == 'deactivate':
+            lc.deactivate()
         else:
             print "Unrecognized launchconfig action"
 
@@ -87,20 +89,43 @@ class Udo:
         if not len(args) or not args[0]:
             print "asgroup command requires an action. Valid actions are: "
             print " activate (cluster) (role) - create an autoscale group"
+            print " deactivate (cluster) (role) - delete an autoscale group and terminate all instances"
+            print " reload (cluster) (role) - deactivates asgroup and launchconfig, then recreates them"
+            print " updatelc (cluster) (role) - generates a new launchconfig version"
             return
         action = args.pop(0)
 
         # TODO: hook up 'list'
 
         # need cluster/role
-        if len(args) < 2:
+        if len(args) < 1:
             print "Please specify cluster and role for any asgroup command"
             return
         cluster = args.pop(0)
-        role = args.pop(0)
-        if not cluster or not role:
-            print "launchconfig command requires a cluster and a role"
+        if not cluster:
+            print "launchconfig command requires a cluster"
             return
+
+        # use role name if specified, otherwise assume they meant the obvious thing
+        # if there's only one role
+        if len(args):
+            role = args.pop(0)
+        else:
+            roles = config.get_cluster_config(cluster).get('roles')
+            if not roles:
+                print "Cluster config for {} not found".format(cluster)
+                return
+
+            rolenames = roles.keys()
+            if len(rolenames) == 1:
+                # assume the only role
+                print "No role specified, assuming {}".format(rolenames[0])
+                role = rolenames[0]
+            else:
+                print "Multiple roles available for cluster {}".format(cluster())
+                for r in roles:
+                    print "  - {}".format(r)
+                return
 
         ag = asgroup.AutoscaleGroup(cluster, role)
 
@@ -110,6 +135,8 @@ class Udo:
             ag.deactivate()
         elif action == 'reload':
             ag.reload()
+        elif action == 'updatelc':
+            ag.update_lc()
         else:
             print "Unrecognized asgroup action"
 
@@ -151,9 +178,11 @@ Valid commands are:
   * cluster activate (cluster) - create a VPC
   * lc cloudinit (cluster) (role) - display cloud-init script
   * lc activate (cluster) (role) - create a launch configuration
+  * lc deactivate (cluster) (role) - delete a launch configuration
   * asgroup reload (cluster) (role) - deactivate and activate an autoscaling group to update the config
   * asgroup activate (cluster) (role) - create an autoscaling group
   * asgroup deactivate (cluster) (role) - delete an autoscaling group
+  * asgroup updatelc (cluster) (role) - updates launchconfiguration in-place
         """
         sys.exit(1)
 
