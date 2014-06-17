@@ -60,14 +60,8 @@ class Udo:
             return
         action = args.pop(0)
 
-        # need cluster/role
-        if len(args) < 2:
-            print "Please specify cluster and role for any launchconfig command"
-            return
-        cluster = args.pop(0)
-        role = args.pop(0)
+        cluster,role = self.get_cluster_and_role_from_args(*args)
         if not cluster or not role:
-            print "launchconfig command requires a cluster and a role"
             return
 
         lc = launchconfig.LaunchConfig(cluster, role)
@@ -84,7 +78,7 @@ class Udo:
 
 
     # autoscale
-    def asgroup(self, *args):
+    def asg(self, *args):
         args = list(args)
         if not len(args) or not args[0]:
             print "asgroup command requires an action. Valid actions are: "
@@ -97,35 +91,9 @@ class Udo:
 
         # TODO: hook up 'list'
 
-        # need cluster/role
-        if len(args) < 1:
-            print "Please specify cluster and role for any asgroup command"
+        cluster,role = self.get_cluster_and_role_from_args(*args)
+        if not cluster or not role:
             return
-        cluster = args.pop(0)
-        if not cluster:
-            print "launchconfig command requires a cluster"
-            return
-
-        # use role name if specified, otherwise assume they meant the obvious thing
-        # if there's only one role
-        if len(args):
-            role = args.pop(0)
-        else:
-            roles = config.get_cluster_config(cluster).get('roles')
-            if not roles:
-                print "Cluster config for {} not found".format(cluster)
-                return
-
-            rolenames = roles.keys()
-            if len(rolenames) == 1:
-                # assume the only role
-                print "No role specified, assuming {}".format(rolenames[0])
-                role = rolenames[0]
-            else:
-                print "Multiple roles available for cluster {}".format(cluster())
-                for r in roles:
-                    print "  - {}".format(r)
-                return
 
         ag = asgroup.AutoscaleGroup(cluster, role)
 
@@ -155,6 +123,37 @@ class Udo:
         else:
             print "Unknown test command: {}".format(action)
 
+    def get_cluster_and_role_from_args(self, *args):
+        args = list(args)
+
+        # need cluster/role
+        if len(args) < 1:
+            print "Please specify cluster name for this command"
+            return None,None
+        cluster = args.pop(0)
+
+        # use role name if specified, otherwise assume they meant the obvious thing
+        # if there's only one role
+        if len(args):
+            role = args.pop(0)
+        else:
+            roles = config.get_cluster_config(cluster).get('roles')
+            if not roles:
+                print "Cluster config for {} not found".format(cluster)
+                return None,None
+
+            rolenames = roles.keys()
+            if len(rolenames) == 1:
+                # assume the only role
+                print "No role specified, assuming {}".format(rolenames[0])
+                role = rolenames[0]
+            else:
+                print "Multiple roles available for cluster {}".format(cluster)
+                for r in rolenames:
+                    print "  - {}".format(r)
+                return None,None
+
+        return cluster, role
 #####
 
 
@@ -174,15 +173,15 @@ if __name__ == '__main__':
         print """
 Valid commands are:
   * cluster list - view state of clusters
-  * cluster status (cluster) - view state of a cluster
-  * cluster activate (cluster) - create a VPC
-  * lc cloudinit (cluster) (role) - display cloud-init script
-  * lc activate (cluster) (role) - create a launch configuration
-  * lc deactivate (cluster) (role) - delete a launch configuration
-  * asgroup reload (cluster) (role) - deactivate and activate an autoscaling group to update the config
-  * asgroup activate (cluster) (role) - create an autoscaling group
-  * asgroup deactivate (cluster) (role) - delete an autoscaling group
-  * asgroup updatelc (cluster) (role) - updates launchconfiguration in-place
+  * cluster status - view state of a cluster
+  * cluster activate - create a VPC
+  * lc cloudinit - display cloud-init script
+  * lc activate - create a launch configuration
+  * lc deactivate - delete a launch configuration
+  * asg reload - deactivate and activate an autoscaling group to update the config
+  * asg activate - create an autoscaling group
+  * asg deactivate - delete an autoscaling group
+  * asg updatelc - updates launchconfiguration in-place
         """
         sys.exit(1)
 
