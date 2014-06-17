@@ -17,7 +17,7 @@ class AutoscaleGroup:
     def __init__(self, cluster_name, role_name):
         self.cluster_name = cluster_name
         self.role_name = role_name
-        self.role_config = _cfg.get_role_config(cluster_name, role_name)
+        self.role_config = config.get_role_config(cluster_name, role_name)
         self.conn = util.as_conn()
 
     def name(self):
@@ -51,6 +51,11 @@ class AutoscaleGroup:
     # may or may not exist
     def lc(self):
         lc = launchconfig.LaunchConfig(self.cluster_name, self.role_name)
+        if self.exists():
+            asgroup = self.get_asgroup()
+            blc = asgroup.launch_config_name
+            if blc:
+                lc.set_name(blc)
         return lc
 
     # returns true if the LC exists
@@ -66,9 +71,18 @@ class AutoscaleGroup:
     # we can't modify a launchconfig in place, we have to create
     # a new one and set that as our lc
     def update_lc(self):
-        #tempname = self.name() + '-temp'
-        lc = self.lc()
-        lc.update()
+        oldlc = self.lc()
+        # get new version
+        lc = oldlc.update()
+        # set lc
+        asgroup = self.get_asgroup()
+        lcname = lc.name()
+        setattr(asgroup, 'launch_config_name', lcname)
+        asgroup.update()
+        # delete old
+        conn = util.as_conn()
+        if oldlc.name() is not lcname:
+            util.retry(lambda: conn.delete_launch_configuration(oldlc.name()), 60)
 
     def get_asgroup(self):
         conn = util.as_conn()

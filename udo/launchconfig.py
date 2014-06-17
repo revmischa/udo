@@ -2,6 +2,7 @@ import config
 import util
 import cluster
 
+import re
 import os
 import sys
 from pprint import pprint
@@ -20,11 +21,15 @@ class LaunchConfig:
     def __init__(self, cluster_name, role_name):
         self.cluster_name = cluster_name
         self.role_name = role_name
-        self.role_config = _cfg.get_role_config(cluster_name, role_name)
+        self.role_config = config.get_role_config(cluster_name, role_name)
         self.conn = util.as_conn()
+        self._name = "-".join([self.cluster_name, self.role_name])
 
+    # have a default name, but can be overridden
     def name(self):
-        return "-".join([self.cluster_name, self.role_name])
+        return self._name
+    def set_name(self, name):
+        self._name = name
 
     # processes the script/cloud-init.sh template, returns a string
     def cloud_init_script(self):
@@ -61,11 +66,29 @@ class LaunchConfig:
             return True
         return False
 
+    # we can't modify a launchconfig in place, we have to create
+    # a new one. returns new udo.lc
     def update(self):
         if not self.exists():
-            return False
-        lc = self.get_lc()
-        lc.update()
+            # easy, just create it
+            print "not exists"
+            self.activate()
+            return self
+        # generate a name for the new lc version
+        name = self.name()
+        vermatch = re.search(r'-v(\d+)$', name)
+        if vermatch:
+            # increment version #
+            ver = int(vermatch.group(1))
+            ver = ver+1
+            name = re.sub(r'-v(\d+)$', '-v'+str(ver), name)
+        else:
+            name = name + '-v2'
+        # create the new lc and return it
+        newlc = LaunchConfig(self.cluster_name, self.role_name)
+        newlc.set_name(name)
+        newlc.activate()
+        return newlc
 
     def get_lc(self):
         conn = util.as_conn()

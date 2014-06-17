@@ -132,23 +132,33 @@ class Config:
         # assume scalar, val2 overwrites val1
         return val2
 
-    # for convenience        
-    def get_role_config(self, cluster_name, role_name):
-        # check clusters
-        cluster_config = self.new_root('clusters')
-        if cluster_name not in cluster_config.get():
-            print "Invalid cluster name: {}".format(cluster_name)
-            return
+##
 
-        # check roles
-        roles_config = cluster_config.new_root(cluster_name, 'roles')
-        if not roles_config:
-            print "No roles defined in cluster {}".format(cluster_name)
-            return
-        if role_name not in roles_config.get():
-            print "Invalid role name: {}".format(role_name)
-            return;
+# for convenience        
+def get_cluster_config(cluster_name):
+    # check clusters
+    cluster_config = Config().new_root('clusters')
+    if cluster_name not in cluster_config.get():
+        print "Invalid cluster name: {}".format(cluster_name)
+        return
+    return cluster_config.new_root(cluster_name)
 
-        return roles_config.new_root(role_name)
+def get_role_config(cluster_name, role_name):
+    # check clusters
+    cluster_config = Config().new_root('clusters')
+    if cluster_name not in cluster_config.get():
+        print "Invalid cluster name: {}".format(cluster_name)
+        return
+
+    # check roles
+    roles_config = cluster_config.new_root(cluster_name, 'roles')
+    if not roles_config:
+        print "No roles defined in cluster {}".format(cluster_name)
+        return
+    if role_name not in roles_config.get():
+        print "Invalid role name: {}".format(role_name)
+        return;
+
+    return roles_config.new_root(role_name)
 
 
