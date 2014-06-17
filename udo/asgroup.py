@@ -63,6 +63,13 @@ class AutoscaleGroup:
         print "Creating LaunchConfig {}".format(lc.name())
         return lc.activate()
 
+    # we can't modify a launchconfig in place, we have to create
+    # a new one and set that as our lc
+    def update_lc(self):
+        #tempname = self.name() + '-temp'
+        lc = self.lc()
+        lc.update()
+
     def get_asgroup(self):
         conn = util.as_conn()
         ags = conn.get_all_groups(names = [self.name()])

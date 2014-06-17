@@ -61,6 +61,12 @@ class LaunchConfig:
             return True
         return False
 
+    def update(self):
+        if not self.exists():
+            return False
+        lc = self.get_lc()
+        lc.update()
+
     def get_lc(self):
         conn = util.as_conn()
         lcs = conn.get_all_launch_configurations(names = [self.name()])

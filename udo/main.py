@@ -75,6 +75,8 @@ class Udo:
             print cloudinit
         elif action == 'activate':
             lc.activate()
+        elif action == 'update':
+            lc.update()
         else:
             print "Unrecognized launchconfig action"
 
