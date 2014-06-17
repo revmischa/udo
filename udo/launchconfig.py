@@ -42,16 +42,14 @@ class LaunchConfig:
         cloud_init_config = _cfg.get_root()
 
         # add extra template vars
-        cloud_init_config['base_packages'] = " ".join(_cfg.get('packages'))
-        cloud_init_config['role_packages'] = " ".join(self.role_config.get('packages'))
-        cloud_init_config['repo_url'] = _cfg.get('repo', 'url')
-        cloud_init_config['yum_plugin_url'] = _cfg.get('repo', 'plugin_url')
+        cloud_init_config['base_packages'] = " ".join(_cfg.get('packages')) or ''
+        cloud_init_config['yum_plugin_url'] = _cfg.get('repo', 'plugin_url') or ''
+        # from role config
+        cloud_init_config['role_packages'] = " ".join(self.role_config.get('packages')) or ''
+        cloud_init_config['repo_url'] = self.role_config.get('repo_url') or ''
 
         # append extra commands from config
-        cloud_init_extra = _cfg.get('cloud_init')
-        if not cloud_init_extra:
-            cloud_init_extra = ''
-        cloud_init_config['cloud_init_extra'] = cloud_init_extra
+        cloud_init_config['cloud_init_extra'] = _cfg.get('cloud_init') or ''
 
         cloud_init = cloud_init_template.substitute(**cloud_init_config)
         return cloud_init

@@ -13,12 +13,22 @@ curl @yum_plugin_url \
 rpm -i $BOOTSTRAP_DIR/yum-plugin-s3-iam.noarch.rpm
 
 # add our app yum repo
-curl @repo_url > /etc/yum.repos.d/@{app_name}.repo
+if [[ -n "@repo_url" ]]; then
+	cat > /etc/yum.repos.d/@{app_name}.repo <<YUMREPO
+[@app_name]
+name=@app_name
+baseurl=@repo_url
+enabled=1
+s3_enabled=1
+gpgcheck=0
+YUMREPO
+fi
 
 # load up repo metadata
 yum makecache
 
 # install updates
+
 yum update -y
 
 # your stuff from cloud_init config
