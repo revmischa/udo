@@ -108,8 +108,8 @@ class AutoscaleGroup:
 
         # look up subnet id
         subnets = [self.find_vpc_subnet_by_cidr(cidr) for cidr in cfg.get('subnets_cidr')]
-        if not subnets or not len(subnets):
-            print "Subnet CIDR is required for {}/{}".format(self.cluster_name, self.role_name)
+        if not subnets or not len(subnets) or None in subnets:
+            print "Valid subnets_cidr are required for {}/{}".format(self.cluster_name, self.role_name)
             return False
         print "Using subnets {}".format(", ".join([s.id for s in subnets]))
         print "AZs: {}".format(cfg.get('availability_zones'))
