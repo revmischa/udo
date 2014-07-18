@@ -24,10 +24,9 @@ class AutoscaleGroup:
         return "-".join([self.cluster_name, self.role_name])
 
     def exists(self):
-        conn = util.as_conn()
-        ags = conn.get_all_groups(names = [self.name()])
-        if len(ags):
-            return True
+        asg = self.get_asgroup()
+        if asg:
+            return asg
         return False
 
     def find_vpc_subnet_by_cidr(self, cidr):
@@ -53,6 +52,8 @@ class AutoscaleGroup:
         lc = launchconfig.LaunchConfig(self.cluster_name, self.role_name)
         if self.exists():
             asgroup = self.get_asgroup()
+            if not asgroup:
+                return None  # this might be a race condition between exists() and get_asgroup()
             blc = asgroup.launch_config_name
             if blc:
                 lc.set_name(blc)
