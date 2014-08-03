@@ -8,13 +8,15 @@ BOOTSTRAP_DIR=/root/.udo
 mkdir -p $BOOTSTRAP_DIR
 
 # set up Yum S3 IAM plugin
-curl @yum_plugin_url \
-    > $BOOTSTRAP_DIR/yum-plugin-s3-iam.noarch.rpm
-rpm -i $BOOTSTRAP_DIR/yum-plugin-s3-iam.noarch.rpm
+if [[ -n "@yum_plugin_url" ]]; then
+    curl @yum_plugin_url \
+        > $BOOTSTRAP_DIR/yum-plugin-s3-iam.noarch.rpm
+    rpm -i $BOOTSTRAP_DIR/yum-plugin-s3-iam.noarch.rpm
+fi
 
 # add our app yum repo
 if [[ -n "@repo_url" ]]; then
-	cat > /etc/yum.repos.d/@{app_name}.repo <<YUMREPO
+    cat > /etc/yum.repos.d/@{app_name}.repo <<YUMREPO
 [@app_name]
 name=@app_name
 baseurl=@repo_url
@@ -28,7 +30,6 @@ fi
 yum makecache
 
 # install updates
-
 yum update -y
 
 # your stuff from cloud_init config
