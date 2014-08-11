@@ -32,6 +32,7 @@ setup(
     install_requires=[
         'Boto>=2.0.0',
         'PyYAML',
+        'parallel-ssh',
     ],
     author_email='revmischa@cpan.org',
     description='Automate AWS deployments',
