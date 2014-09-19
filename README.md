@@ -78,8 +78,10 @@ $ script/udo asg updatelc dev webapp
 ## What's all this then, eh?
 
 ### What does Udo do?
-Udo is a small collection of useful tools for managing clusters in AWS. It uses the python `boto` library to communicate with the AWS APIs to automate creation of clusters and instances, making full use of VPCs and AutoScaling Groups.  
-Udo allows you to define your entire operational structure in a straightforward configuration file, and then use the Udo command-line tool to bring up and manage clusters and groups of instances. It takes the tedious work out of creating nearly identical clusters by hand, and automates actions like creating and managing launconfigurations and autoscaling groups, parallelizing SSH commands by ASgroup (orchestration without the need for any running services), and performing graceful upgrades of instances in an autoscale group without downtime.
+Udo is a small collection of useful tools for managing clusters in AWS. It uses the python `boto` library to communicate with the AWS APIs to automate orchestration of clusters and instances, making full use of VPCs and AutoScaling Groups.  
+Udo allows you to define your entire operational structure in a straightforward configuration file, and then use the Udo command-line tool to bring up and manage clusters and groups of instances. It takes the tedious work out of creating nearly identical clusters by hand, and automates actions like creating and managing launconfigurations and autoscaling groups, parallelizing SSH commands by ASgroup (orchestration without the need for any running services or keeping track of instances), and performing graceful upgrades of instances in an autoscale group without downtime.
+Conceptually, all instances in a cluster should be identical and operations should be performed on clusters, not instances. There is a hierarchy of configuration values that should be applied at different levels of clusters and sub-clusters, and the [configuration schema](config.sample.yml) takes that into account.
+
 
 ### What do _you_ do?
 Most development projects utilize several distinct sets of environments, such as dev, qa, stage, production. These clusters are generally partitioned into different roles, such as a web application server, asynchronous worker machine, monitoring and so on.  
@@ -93,7 +95,7 @@ If you're using Puppet, Chef, or care about hostnames/IPs, you're almost definit
 
 ### Does this work?
 I've been using this in production for a decent length of time with minimal trouble. It's been very handy for managing groups of instances without the need for any special services running on them. We mostly use it for turning QA clusters off when not in use, cleanly reprovisioning instances, and updating launchconfigurations in place on production (something you cannot currently do with the AWS GUI or CLI). 
-Several Amazon engineers have reviewed Udo and given it their seal of approval. They said many companies have similar internal tools, but they don't open-source them. Hopefully this code will save someone some effort. 
+Several Amazon engineers have reviewed Udo and given it their seal of approval. They said that many companies have similar internal tools, but they don't open-source them. Hopefully this code will save someone some effort and provide a central point where efforts can be focused. 
 
 
 ### Summary of a proper AWS setup:
@@ -109,6 +111,7 @@ Several Amazon engineers have reviewed Udo and given it their seal of approval. 
 - Bringing clusters up and down and reprovisioning them, using ASgroups to track membership and SSH for orchestration.
 - Installing a cloud-init script to provision instances. You can add your own commands to it via config.
 - Using RPMs to provision instances (optional)
+- Updating launchconfig and asgroup parameters on the fly
 
 
 ### TODO:
