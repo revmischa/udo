@@ -2,6 +2,7 @@
 /config.yml
 /udo.sublime-workspace
 /include
+/local
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
