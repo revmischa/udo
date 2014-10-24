@@ -42,8 +42,8 @@ class Udo:
             cl = cluster.Cluster(cluster_name)
             if action == 'status':
                 print "{} status: {}".format(cluster_name, cl.status())
-            elif action == 'activate':
-                if not cl.activate():
+            elif action == 'create':
+                if not cl.create():
                     print "Failed to bring up {} cluster".format(cluster_name)
             else:
                 print "Unknown cluster command: {}".format(action)
@@ -55,8 +55,8 @@ class Udo:
         if not len(args) or not args[0]:
             print "launchconfig command requires an action. Valid actions are: "
             print " cloudinit (cluster) (role) - view cloud_init bootstrap script"
-            print " activate (cluster) (role) - create launch configuration"
-            print " deactivate (cluster) (role) - delete launch configuration"
+            print " create (cluster) (role) - create launch configuration"
+            print " destroy (cluster) (role) - delete launch configuration"
             return
         action = args.pop(0)
 
@@ -69,9 +69,9 @@ class Udo:
         if action == 'cloudinit':
             cloudinit = lc.cloud_init_script()
             print cloudinit
-        elif action == 'activate':
+        elif action == 'create':
             lc.activate()
-        elif action == 'deactivate':
+        elif action == 'destroy':
             lc.deactivate()
         else:
             print "Unrecognized launchconfig action"
@@ -82,9 +82,9 @@ class Udo:
         args = list(args)
         if not len(args) or not args[0]:
             print "asgroup command requires an action. Valid actions are: "
-            print " activate (cluster) (role) - create an autoscale group"
-            print " deactivate (cluster) (role) - delete an autoscale group and terminate all instances"
-            print " reload (cluster) (role) - deactivates asgroup and launchconfig, then recreates them"
+            print " create (cluster) (role) - create an autoscale group"
+            print " destroy (cluster) (role) - delete an autoscale group and terminate all instances"
+            print " reload (cluster) (role) - destroys asgroup and launchconfig, then recreates them"
             print " updatelc (cluster) (role) - generates a new launchconfig version"
             return
         action = args.pop(0)
@@ -97,9 +97,9 @@ class Udo:
 
         ag = asgroup.AutoscaleGroup(cluster, role)
 
-        if action == 'activate':
+        if action == 'create':
             ag.activate()
-        elif action == 'deactivate':
+        elif action == 'destroy':
             ag.deactivate()
         elif action == 'reload':
             ag.reload()
@@ -174,13 +174,13 @@ if __name__ == '__main__':
 Valid commands are:
   * cluster list - view state of clusters
   * cluster status - view state of a cluster
-  * cluster activate - create a VPC
+  * cluster create - create a VPC
   * lc cloudinit - display cloud-init script
-  * lc activate - create a launch configuration
-  * lc deactivate - delete a launch configuration
-  * asg reload - deactivate and activate an autoscaling group to update the config
-  * asg activate - create an autoscaling group
-  * asg deactivate - delete an autoscaling group
+  * lc create - create a launch configuration
+  * lc destroy - delete a launch configuration
+  * asg reload - destroy and create an autoscaling group to update the config
+  * asg create - create an autoscaling group
+  * asg destroy - delete an autoscaling group
   * asg updatelc - updates launchconfiguration in-place
         """
         sys.exit(1)
