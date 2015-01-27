@@ -92,6 +92,18 @@ class AutoscaleGroup:
             return None
         return ags[0]
 
+    # set desired_size
+    def scale(self, desired):
+        asgroup = self.get_asgroup()
+        current = asgroup.desired_capacity
+        asgroup.desired_capacity = desired
+        asgroup.update()
+        asgroup = self.get_asgroup()
+        new = asgroup.desired_capacity
+        if (new != current):
+            msg = "Changed ASgroup {} desired_capacity from {} to {}".format(self.name(), current, new)
+            util.message_integrations(msg)
+
     # kill of ASgroup and recreate it
     def reload(self):
         if not util.confirm("Are you sure you want to tear down the {} ASgroup and recreate it?".format(self.name())):

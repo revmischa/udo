@@ -86,12 +86,13 @@ class Udo:
             print " destroy (cluster) (role) - delete an autoscale group and terminate all instances"
             print " reload (cluster) (role) - destroys asgroup and launchconfig, then recreates them"
             print " updatelc (cluster) (role) - generates a new launchconfig version"
+            print " scale (cluster) (role) (desired) - set desired number of instances"
             return
         action = args.pop(0)
 
         # TODO: hook up 'list'
 
-        cluster,role = self.get_cluster_and_role_from_args(*args)
+        cluster,role,extra = self.get_cluster_and_role_from_args(*args)
         if not cluster or not role:
             return
 
@@ -105,8 +106,12 @@ class Udo:
             ag.reload()
         elif action == 'updatelc':
             ag.update_lc()
+        elif action == 'scale':
+            # get scale arg
+            scale = extra
+            ag.scale(scale)
         else:
-            print "Unrecognized asgroup action"
+            print "Unrecognized asgroup action {}".format(action)
 
 
     # for testing features
@@ -153,7 +158,12 @@ class Udo:
                     print "  - {}".format(r)
                 return None,None
 
-        return cluster, role
+        # still stuff?
+        extra = None
+        if len(args):
+            extra = args.pop(0)
+
+        return cluster, role, extra
 #####
 
 
@@ -182,6 +192,7 @@ Valid commands are:
   * asg create - create an autoscaling group
   * asg destroy - delete an autoscaling group
   * asg updatelc - updates launchconfiguration in-place
+  * asg scale - set desired number of instances
         """
         sys.exit(1)
 
