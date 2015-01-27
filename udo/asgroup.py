@@ -95,6 +95,16 @@ class AutoscaleGroup:
     # set desired_size
     def scale(self, desired):
         asgroup = self.get_asgroup()
+
+        if desired < asgroup.min_size:
+            print "Cannot scale: {} is lower than min_size ({})".format(desired, asgroup.min_size)
+            return
+        if desired > asgroup.max_size:
+            print "Cannot scale: {} is lower than max_size ({})".format(desired, asgroup.max_size)
+            if not util.confirm("Increase max_size to {}?".format(desired)):
+                return
+            asgroup.max_size = desired
+
         current = asgroup.desired_capacity
         asgroup.desired_capacity = desired
         asgroup.update()
