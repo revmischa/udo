@@ -108,7 +108,7 @@ class Udo:
             ag.update_lc()
         elif action == 'scale':
             # get scale arg
-            scale = extra
+            scale = int(extra)
             ag.scale(scale)
         else:
             print "Unrecognized asgroup action {}".format(action)
