@@ -32,6 +32,7 @@ Valid commands are:
   * asg activate - create an autoscaling group
   * asg deactivate - delete an autoscaling group
   * asg updatelc - updates launchconfiguration in-place
+  * asg scale 5 - set number of desired instances in autoscaling group
 
 # create a VPC from our config by name
 $ cluster activate dev webapp
@@ -62,18 +63,23 @@ Using subnets subnet-cf9a87321, subnet-bfac8123
 AZs: ['us-west-2a', 'us-west-2b']
 Activated ASgroup prod-worker
 
-# bonus slack notifications (if configured)
-20:11 < UdoBot> Reloading ASgroup prod-worker
-20:12 < UdoBot> Deleted ASgroup prod-worker
-20:12 < UdoBot> Deleted LaunchConfig prod-worker
-20:12 < UdoBot> Activated LaunchConfig prod-worker
-20:13 < UdoBot> Activated ASgroup prod-worker
+# change desired instances
+$ script/udo asg scale prod worker 10
+Cannot scale: 10 is greater than max_size (7)
+Increase max_size to 10? (y/n) y
+Changed ASgroup prod-worker desired_capacity from 4 to 10
 
+# bonus slack notifications (if configured)
+< UdoBot> Changed ASgroup prod-worker desired_capacity from 4 to 10
+< UdoBot> Reloading ASgroup prod-worker
+< UdoBot> Deleted ASgroup prod-worker
+< UdoBot> Deleted LaunchConfig prod-worker
+< UdoBot> Activated LaunchConfig prod-worker
+< UdoBot> Activated ASgroup prod-worker
 
 # update launchconfig for an existing autoscaling group (bonus feature not provided by AWS or boto)
 $ script/udo asg updatelc dev webapp
 ```
-
 
 ## What's all this then, eh?
 
