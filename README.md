@@ -32,7 +32,9 @@ Valid commands are:
   * asg activate - create an autoscaling group
   * asg deactivate - delete an autoscaling group
   * asg updatelc - updates launchconfiguration in-place
-  * asg scale 5 - set number of desired instances in autoscaling group
+  * asg scale - set number of desired instances in autoscaling group
+  * deploy list - view CodeDeploy configuration and status
+  * deploy create - create new revision deployment
 
 # create a VPC from our config by name
 $ cluster activate dev webapp
@@ -63,11 +65,25 @@ Using subnets subnet-cf9a87321, subnet-bfac8123
 AZs: ['us-west-2a', 'us-west-2b']
 Activated ASgroup prod-worker
 
-# change desired instances
+# change asgroup desired instance capacity
 $ script/udo asg scale prod worker 10
 Cannot scale: 10 is greater than max_size (7)
 Increase max_size to 10? (y/n) y
 Changed ASgroup prod-worker desired_capacity from 4 to 10
+
+# deploy with CodeDeploy
+$ script/udo deploy list groups
+ - Group: MyCompany/MyApp
+$ script/udo deploy create myapp 740800da74f1ebee37ed1ee         
+Deploying commit 750800da74 to deployment group: MyApp
+ - MyCompany/MyApp
+     Created: Friday, 30. January 2015 10:56PM
+     Status: InProgress
+     Message: 
+$ script/udo deploy list deployments
+ - MyCompany/MyApp
+     Created: Friday, 30. January 2015 10:56PM
+     Status: Success
 
 # bonus slack notifications (if configured)
 < UdoBot> Changed ASgroup prod-worker desired_capacity from 4 to 10
@@ -87,7 +103,7 @@ $ script/udo asg updatelc dev webapp
 Udo is a small collection of useful tools for managing clusters in AWS. It uses the python `boto` library to communicate with the AWS APIs to automate orchestration of clusters and instances, making full use of VPCs and AutoScaling Groups.  
 Udo allows you to define your entire operational structure in a straightforward configuration file, and then use the Udo command-line tool to bring up and manage clusters and groups of instances. It takes the tedious work out of creating nearly identical clusters by hand, and automates actions like creating and managing launconfigurations and autoscaling groups, parallelizing SSH commands by ASgroup (orchestration without the need for any running services or keeping track of instances), and performing graceful upgrades of instances in an autoscale group without downtime.
 Conceptually, all instances in a cluster should be identical and operations should be performed on clusters, not instances. There is a hierarchy of configuration values that should be applied at different levels of clusters and sub-clusters, and the [configuration schema](config.sample.yml) takes that into account.  
-Deploy code with [AWS CodeDeploy](http://docs.aws.amazon.com/codedeploy/latest/userguide/welcome.html) and you don't even need to access your instances ever. Deploys commits straight from GitHub.  
+Udo can be used to automate deployments with [AWS CodeDeploy](http://docs.aws.amazon.com/codedeploy/latest/userguide/welcome.html) and you don't even need to access your instances ever. Deploys commits straight from GitHub (S3 support coming soon).  
 
 
 ### What do _you_ do?
@@ -126,3 +142,4 @@ Several Amazon engineers have reviewed Udo and given it their seal of approval. 
 
 ### TODO:
 * Parallel-SSH integration (needs to be merged from another repo)
+* CodeDeploy support from S3

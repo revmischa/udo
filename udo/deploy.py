@@ -106,7 +106,7 @@ class Deploy:
         if 'errorInformation' in info:
             error_info = info['errorInformation']
             msg = error_info['message']
-        # else get status...
+        # else get status...?
 
         if 'gitHubLocation' in rev_info:
             commit_id = rev_info['gitHubLocation']['commitId']
@@ -138,7 +138,7 @@ class Deploy:
         # TODO: fetch more groups via next_token if available
         group_names = groups['deploymentGroups']
         for name in group_names:
-            print " - Configuration: {}".format(name)
+            print " - Group: {}/{}".format(application, name)
 
     def list_configs(self):
         cfgs = self.conn.list_deployment_configs()

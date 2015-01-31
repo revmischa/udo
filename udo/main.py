@@ -122,6 +122,7 @@ class Udo:
             print "deploy command requires an action. Valid actions are: "
             print " list applications"
             print " list groups [application]"
+            print " list deployments"
             print " list configs"
             print " create (cluster) [role] (commit_id)"
             return
@@ -234,6 +235,7 @@ if __name__ == '__main__':
         if not args.cmd:
             args.cmd = ""
         print "'{}' is not a valid command".format(args.cmd)
+        # full command summary
         print """
 Valid commands are:
   * cluster list - view state of clusters
