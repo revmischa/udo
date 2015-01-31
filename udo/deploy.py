@@ -25,6 +25,9 @@ class Deploy:
             self.cfg = _cfg.get_root()
         self.conn = util.deploy_conn()
 
+    def commit_id_display(self, commit_id):
+        return commit_id[:10]
+
     def get_deploy_config(self):
         if not self.cfg:
             return None
@@ -69,7 +72,7 @@ class Deploy:
                 'commitId': commit_id,
             }
         }
-        msg = "Deploying commit {} to deployment group: {}".format(commit_id, group_name)
+        msg = "Deploying commit {} to deployment group: {}".format(self.commit_id_display(commit_id), group_name)
         deployment = self.conn.create_deployment(application_name,
             deployment_group_name=group_name,
             revision=deploy_rev,
@@ -109,7 +112,7 @@ class Deploy:
         # else get status...?
 
         if 'gitHubLocation' in rev_info:
-            commit_id = rev_info['gitHubLocation']['commitId']
+            commit_id = self.commit_id_display(rev_info['gitHubLocation']['commitId'])
         print """ - {}/{}
      Created: {}
      Status: {}
