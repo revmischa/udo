@@ -11,6 +11,7 @@ import launchconfig
 import util
 import asgroup
 import config
+import deploy
 
 import boto.ec2.autoscale
 from boto.ec2.autoscale import AutoScaleConnection
@@ -114,6 +115,59 @@ class Udo:
             print "Unrecognized asgroup action {}".format(action)
 
 
+    # CodeDeploy
+    def deploy(self, *args):
+        args = list(args)
+        if not len(args) or not args[0]:
+            print "deploy command requires an action. Valid actions are: "
+            print " list applications"
+            print " list groups [application]"
+            print " list configs"
+            print " create (cluster) [role] (commit_id)"
+            return
+        action = args.pop(0)
+
+        if action == 'list':
+            dep = deploy.Deploy()
+            if not len(args):
+                print "list what? applications, groups, deployments or configs?"
+                return
+            what = args.pop(0)
+            if what == 'applications' or what == 'apps':
+                dep.list_applications()
+            elif what == 'groups':
+                # application name?
+                application = None
+                if len(args):
+                    application = args.pop(0)
+                dep.list_groups(application)
+            elif what == 'configs':
+                dep.list_configs()
+            elif what == 'deployments':
+                dep.list_deployments()
+            else:
+                print "Unknown list type: {}".format(what)
+        elif action == 'create':
+            # require cluster, role (optional), commit_id
+            cluster = None
+            role = None
+            commit_id = None
+            if len(args) < 2:
+                print "deploy create requires at least cluster and commit id"
+                return
+            elif len(args) == 2:
+                cluster = args.pop(0)
+                commit_id = args.pop(0)
+            elif len(args) == 3:
+                cluster = args.pop(0)
+                role = args.pop(0)
+                commit_id = args.pop(0)
+            dep = deploy.Deploy(cluster, role)
+            dep.create(commit_id)
+        else:
+            print "Unknown deploy command: {}".format(action)
+
+
     # for testing features
     def test(self, *args):
         args = list(args)
@@ -193,6 +247,11 @@ Valid commands are:
   * asg destroy - delete an autoscaling group
   * asg updatelc - updates launchconfiguration in-place
   * asg scale - set desired number of instances
+  * deploy list apps - view CodeDeploy applications
+  * deploy list groups - view CodeDeploy application deployment groups
+  * deploy list deployments - view CodeDeploy deployment statuses
+  * deploy list configs - view CodeDeploy configurations
+  * deploy create (cluster) [role] (commit) - create new deployment for commit on cluster, role is optional
         """
         sys.exit(1)
 

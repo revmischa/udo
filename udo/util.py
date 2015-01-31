@@ -31,6 +31,12 @@ def as_conn():
     region = args.pop('region')
     return boto.ec2.autoscale.connect_to_region(region.name, **args)
 
+# codedeploy connection
+def deploy_conn():
+    args = connection_args()
+    region = args.pop('region')
+    return boto.codedeploy.connect_to_region(region.name, **args)
+
 # ask a yes/no question
 # returns true/false
 def confirm(msg):

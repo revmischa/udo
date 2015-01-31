@@ -62,6 +62,9 @@ class AutoscaleGroup:
     # returns true if the LC exists
     def activate_lc(self):
         # make sure we have a launchconfig activated
+        if not self.lc():
+            # might need to wait a min
+            util.retry(lambda: self.lc(), 60)
         lc = self.lc()
         if lc.exists():
             print "Using LaunchConfig {}".format(lc.name())
