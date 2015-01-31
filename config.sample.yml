@@ -34,7 +34,23 @@ slack:
 # (see script/cloud-init.sh)
 cloud_init: |
     touch /root/myapp_init
-    gem install sass
+    # install AWS CLI tools
+    yum install -y aws-cli
+    # install CodeDeploy agent
+    cd /home/ec2-user
+    aws s3 cp s3://aws-codedeploy-us-west-2/latest/install . --region us-west-2
+    chmod +x ./install
+    ./install auto
+    rm install
+
+# CodeDeploy
+# 'application' and 'group' should reference existing configurations
+# http://docs.aws.amazon.com/codedeploy/latest/userguide/welcome.html
+deploy:
+    application: 'MyCompany'
+    group: 'MyApp' # probably want to specify per-cluster
+    github:
+        repo: 'mycompany/myapp' # GH repo name
 
 # cluster = set of AWS resources managed as a group
 # (instances, ASgroup, launchconfigs, all in a VPC)
@@ -53,6 +69,9 @@ clusters:
         subnets_cidr: 
             - '10.10.0.0/16'
             - '10.20.0.0/16'
+        # CodeDeploy group configuration
+        deploy:
+            group: 'Dev'
         # for instance roles
         iam_profile: 'developer'
         # application roles for instances
