@@ -33,7 +33,7 @@ clusters:
 """
 
         self.parsed = udo.config.parse(self.conf_yaml)
-        self.conf = udo.config.Config(self.parsed)
+        self.conf = udo.config.Config(root=self.parsed)
         self.assertTrue(self.parsed)
         pass
 
