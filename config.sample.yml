@@ -78,7 +78,7 @@ clusters:
         # think: sub-clusters that can be managed as distinct sets
         roles:
             webapp:
-                instance_type: 'm1.medium'
+                instance_type: 'm3.medium'
                 scale_policy:
                     min_size: 1
                     max_size: 3
