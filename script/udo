@@ -1,4 +1,4 @@
 #!/bin/bash
 
-BINPATH=`dirname $0`
-python "$BINPATH/../udo/main.py" $@
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+python "$DIR/../udo/main.py" $@
