@@ -1,5 +1,6 @@
 import yaml
 from pprint import pprint
+import os
 
 """
 This class provides an interface into the entire AWS configuration.
@@ -27,7 +28,11 @@ how2use:
 # class method
 def load():
     _path = "config.yml"
-    f = open(_path, 'r')
+    try:
+        f = open(_path, 'r')
+    except IOError as e:
+        print "Failed opening file {}: {}".format(_path, os.strerror(e.errno))
+        return None
     contents = f.read()
     f.close()
     return parse(contents)

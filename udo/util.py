@@ -7,10 +7,12 @@ import urllib2
 from time import sleep
 import sys
 
-_cfg = config.Config()
+# don't use for tests
+def default_config():
+    return config.Config()
 
 def region():
-    return _cfg.get('region')
+    return default_config().get('region')
 
 # returns dict of arguments common to any boto connection we establish
 def connection_args():
@@ -57,7 +59,7 @@ def retry(proc, timeout):
             ret = proc()     
             success = True
         except boto.exception.BotoServerError as e:
-            if _cfg.get('debug'):
+            if default_config().get('debug'):
                 # dump response
                 print "Error: {}, retrying...".format(e)
             else:
@@ -74,7 +76,7 @@ def message_integrations(msg):
     print msg
 
 def message_slack(msg):
-    slack_cfg = _cfg.new_root('slack')
+    slack_cfg = default_config().new_root('slack')
     if not slack_cfg:
         # not configured
         return
