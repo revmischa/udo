@@ -1,5 +1,8 @@
 language: python
 script: python setup.py test
 notifications:
+  webhooks:
+    on_success: change
+    on_failure: change
   slack:
     secure: Ed4gmnZVbf0TP4njREXDRotSq7gco4qVXwgKWNmQoIXqjySN55wTtLFwWpMddxto1Wmu4s243RTJ6Nb+GYaXh8VkkpkUk7O8PHdQlEF5THGL8h+5YIpNrmmE3Vouwb0SHGTctpvdB0XZv9x/TRLdbWl4IK/ubtnSMDU/6khHmKs=
