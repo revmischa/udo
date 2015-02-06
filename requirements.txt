@@ -3,7 +3,7 @@ boto==2.36.0
 ecdsa==0.11
 gevent==1.0.1
 greenlet==0.4.2
-parallel-ssh==0.4
+parallel-ssh==0.70
 paramiko==1.14.0
 pycrypto==2.6.1
 wsgiref==0.1.2
