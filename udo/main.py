@@ -125,6 +125,7 @@ class Udo:
             print " list deployments"
             print " list configs"
             print " create (cluster) [role] (commit_id)"
+            print " last"
             return
         action = args.pop(0)
 
@@ -165,6 +166,9 @@ class Udo:
                 commit_id = args.pop(0)
             dep = deploy.Deploy(cluster, role)
             dep.create(commit_id)
+        elif action == 'last':
+            dep = deploy.Deploy()
+            dep.print_last_deployment()
         else:
             print "Unknown deploy command: {}".format(action)
 
@@ -254,6 +258,7 @@ Valid commands are:
   * deploy list deployments - view CodeDeploy deployment statuses
   * deploy list configs - view CodeDeploy configurations
   * deploy create (cluster) [role] (commit) - create new deployment for commit on cluster, role is optional
+  * deploy last - shows status of most recent deployment
         """
         sys.exit(1)
 
