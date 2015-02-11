@@ -169,6 +169,9 @@ class Udo:
         elif action == 'last':
             dep = deploy.Deploy()
             dep.print_last_deployment()
+        elif action == 'stop':
+            dep = deploy.Deploy()
+            dep.stop_deployment()
         else:
             print "Unknown deploy command: {}".format(action)
 
@@ -259,6 +262,7 @@ Valid commands are:
   * deploy list configs - view CodeDeploy configurations
   * deploy create (cluster) [role] (commit) - create new deployment for commit on cluster, role is optional
   * deploy last - shows status of most recent deployment
+  * deploy stop - cancel last deployment
         """
         sys.exit(1)
 

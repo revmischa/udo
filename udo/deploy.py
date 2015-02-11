@@ -101,6 +101,16 @@ class Deploy:
             return
         self.print_deployment(deps[0])
 
+    def stop_deployment(self):
+        deps = self.conn.list_deployments()['deployments']
+        if not len(deps):
+            print "No deployments found"
+            return
+        last_dep_id = deps[0]
+        self.conn.stop_deployment(last_dep_id)
+        print "Stopped {}".format(last_dep_id)
+        self.print_last_deployment()
+
     def print_deployment(self, dep_id):
         dep = self.conn.get_deployment(dep_id)
         info = dep['deploymentInfo']
