@@ -142,6 +142,12 @@ Several Amazon engineers have reviewed Udo and given it their seal of approval. 
 - Scaling number of instances in an asgroup
 - Automating CodeDeploy revision creation and monitoring
 
+### Known Issues
+#### CodeDeploy:
+* When daemonizing in a CodeDeploy script hook, you must redirect stdout and stderr: 'script.sh 1>/dev/null 2>&1 &' instead of 'script.sh &' (For any jobs running in background)
+* For the current autoscaling behavior, When a new autoscaling instance spins up we deploy the last successfuly deployed revision for that deployment group to it and only put the instance in service if that deployment succeeded.For the Github case, it is possible to deploy a known commit to a deployment group however, we have yet to impliment branch tracking, so simply saying deploy HEAD is not supported at this time. We will try to implement this behavior as soon as possible.
+
+
 
 ### TODO:
 * Parallel-SSH integration (needs to be merged from another repo)
