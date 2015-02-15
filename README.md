@@ -37,6 +37,8 @@ Valid commands are:
   * asg scale - set number of desired instances in autoscaling group
   * deploy list - view CodeDeploy configuration and status
   * deploy create - create new revision deployment
+  * deploy last - view last deployment status
+  * deploy stop - cancel last deployment
 
 # create a VPC from our config by name
 $ cluster activate dev webapp

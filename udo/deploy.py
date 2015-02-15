@@ -94,9 +94,27 @@ class Deploy:
             for dep_id in deps['deployments']:
                 self.print_deployment(dep_id)
 
+    def print_last_deployment(self):
+        deps = self.conn.list_deployments()['deployments']
+        if not len(deps):
+            print "No deployments found"
+            return
+        self.print_deployment(deps[0])
+
+    def stop_deployment(self):
+        deps = self.conn.list_deployments()['deployments']
+        if not len(deps):
+            print "No deployments found"
+            return
+        last_dep_id = deps[0]
+        self.conn.stop_deployment(last_dep_id)
+        print "Stopped {}".format(last_dep_id)
+        self.print_last_deployment()
+
     def print_deployment(self, dep_id):
         dep = self.conn.get_deployment(dep_id)
         info = dep['deploymentInfo']
+        dep_id = info['deploymentId']
         app_name = info['applicationName']
         group_name = info['deploymentGroupName']
         status = info['status']
@@ -113,12 +131,12 @@ class Deploy:
 
         if 'gitHubLocation' in rev_info:
             commit_id = self.commit_id_display(rev_info['gitHubLocation']['commitId'])
-        print """ - {}/{}
+        print """ - {}/{} [{}]
      Created: {}
      Status: {}
      Message: {}
      Commit: {}
-""".format(app_name, group_name, create_time_display, status,
+""".format(app_name, group_name, dep_id, create_time_display, status,
         msg, commit_id)
 
     def list_applications(self):
