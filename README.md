@@ -154,3 +154,7 @@ Several Amazon engineers have reviewed Udo and given it their seal of approval. 
 ### TODO:
 * Parallel-SSH integration (needs to be merged from another repo)
 * CodeDeploy support from S3
+
+
+### Credits
+* Sponsored by [The DevOps League](http://devopsleague.com/)
