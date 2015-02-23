@@ -66,6 +66,10 @@ class AutoscaleGroup:
         if not lc:
             # might need to wait a min
             util.retry(lambda: self.lc(), 60)
+            lc = self.lc()
+        if not lc:
+            print "Timed out waiting to create LaunchConfiguration"
+            return false
         if lc.exists():
             print "Using LaunchConfig {}".format(lc.name())
             return True
