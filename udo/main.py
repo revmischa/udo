@@ -122,7 +122,7 @@ class Udo:
             print " list groups [application]"
             print " list deployments"
             print " list configs"
-            print " create (cluster) [role] (commit_id)"
+            print " create (group) (commit_id)"
             print " last"
             return
         action = args.pop(0)
@@ -148,22 +148,15 @@ class Udo:
             else:
                 print "Unknown list type: {}".format(what)
         elif action == 'create':
-            # require cluster, role (optional), commit_id
-            cluster = None
-            role = None
-            commit_id = None
-            if len(args) < 2:
-                print "deploy create requires at least cluster and commit id"
+            # require group, commit_id
+            if len(args) != 2:
+                print "deploy create requires group and commit id"
                 return
-            elif len(args) == 2:
-                cluster = args.pop(0)
-                commit_id = args.pop(0)
-            elif len(args) == 3:
-                cluster = args.pop(0)
-                role = args.pop(0)
-                commit_id = args.pop(0)
-            dep = deploy.Deploy(cluster, role)
-            dep.create(commit_id)
+
+            group = args.pop(0)
+            commit_id = args.pop(0)
+            dep = deploy.Deploy()
+            dep.create(group, commit_id)
         elif action == 'last':
             dep = deploy.Deploy()
             dep.print_last_deployment()
@@ -258,7 +251,7 @@ Valid commands are:
   * deploy list groups - view CodeDeploy application deployment groups
   * deploy list deployments - view CodeDeploy deployment statuses
   * deploy list configs - view CodeDeploy configurations
-  * deploy create (cluster) [role] (commit) - create new deployment for commit on cluster, role is optional
+  * deploy create (group) (commit) - create new deployment for commit on group
   * deploy last - shows status of most recent deployment
   * deploy stop - cancel last deployment
         """

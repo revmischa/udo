@@ -28,22 +28,11 @@ class Deploy:
     def commit_id_display(self, commit_id):
         return commit_id[:10]
 
-    def get_deploy_config(self):
-        if not self.cfg:
-            return None
-        return self.cfg.get('deploy')
 
     # create a deployment
-    def create(self, commit_id):
-        cfg = self.get_deploy_config()
-        if not cfg:
-            print "deploy configuration not found"
-            return
-        if not 'group' in cfg:
-            print "deployment group not specified in deployment configuration"
-            print "deployment configuration:"
-            print cfg
-            return
+    def create(self, group_name, commit_id):
+        cfg = self.cfg.get('deploy')
+
         if not 'application' in cfg:
             print "deployment application not specified in deployment configuration"
             self.list_applications()
@@ -63,7 +52,6 @@ class Deploy:
             return
         repo_name = source['repo']
 
-        group_name = cfg['group']
         application_name = cfg['application']
         deploy_rev = {
             'revisionType': 'GitHub',

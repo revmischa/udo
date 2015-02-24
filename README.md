@@ -77,14 +77,14 @@ Changed ASgroup prod-worker desired_capacity from 4 to 10
 
 # deploy with CodeDeploy
 $ script/udo deploy list groups
- - Group: MyCompany/MyApp
-$ script/udo deploy create myapp 740800da74f1ebee37ed1ee         
-Deploying commit 750800da74 to deployment group: MyApp
- - MyCompany/MyApp
+ - Group: MyCompany/stage
+$ script/udo deploy create stage 740800da74f1ebee37ed1ee         
+Deploying commit 750800da74 to deployment group: stage
+ - MyCompany/stage
      Created: Friday, 30. January 2015 10:56PM
      Status: InProgress
 $ script/udo deploy list deployments
- - MyCompany/MyApp
+ - MyCompany/stage
      Created: Friday, 30. January 2015 10:56PM
      Status: Success
 
