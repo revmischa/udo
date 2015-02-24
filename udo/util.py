@@ -6,6 +6,9 @@ import json
 import urllib2
 from time import sleep
 import sys
+import os
+import socket
+import getpass
 
 # don't use for tests
 def default_config():
@@ -69,10 +72,14 @@ def retry(proc, timeout):
     print "\n"
     return ret
 
+def user_and_host():
+    username = getpass.getuser()
+    hostname = socket.gethostname()
+    return "{}@{}".format(username, hostname)
 
 # also prints out msg
 def message_integrations(msg):
-    message_slack(msg)
+    message_slack("[{}]  {}".format(user_and_host(), msg))
     print msg
 
 def message_slack(msg):
