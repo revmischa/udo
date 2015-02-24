@@ -13,12 +13,6 @@ import asgroup
 import config
 import deploy
 
-import boto.ec2.autoscale
-from boto.ec2.autoscale import AutoScaleConnection
-from boto.ec2.autoscale import LaunchConfiguration
-from boto.ec2.autoscale import AutoScalingGroup
-
-
 #####
 
 
@@ -87,6 +81,7 @@ class Udo:
             print " destroy (cluster) (role) - delete an autoscale group and terminate all instances"
             print " reload (cluster) (role) - destroys asgroup and launchconfig, then recreates them"
             print " updatelc (cluster) (role) - generates a new launchconfig version"
+            print " scale (cluster) (role) - view current scaling settings"
             print " scale (cluster) (role) (desired) - set desired number of instances"
             return
         action = args.pop(0)
@@ -109,8 +104,11 @@ class Udo:
             ag.update_lc()
         elif action == 'scale':
             # get scale arg
-            scale = int(extra)
-            ag.scale(scale)
+            if extra:
+                scale = int(extra)
+                ag.scale(scale)
+            else:
+                ag.get_scale_size()
         else:
             print "Unrecognized asgroup action {}".format(action)
 

@@ -99,6 +99,11 @@ class AutoscaleGroup:
             return None
         return ags[0]
 
+    # get desired_size
+    def get_scale_size(self):
+        asgroup = self.get_asgroup()
+        print "Desired: {}\nMin:{}\nMax:{}".format(asgroup.desired_capacity, asgroup.min_size, asgroup.max_size)
+
     # set desired_size
     def scale(self, desired):
         asgroup = self.get_asgroup()
