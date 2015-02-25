@@ -135,7 +135,7 @@ class Deploy:
             print " - Application: {}".format(name)
 
     def list_groups(self, application=None):
-        cfg = self.get_deploy_config()
+        cfg = self.cfg.get('deploy')
         if not application and cfg and 'application' in cfg:
             application = cfg['application']
         if not application:
@@ -147,7 +147,20 @@ class Deploy:
         # TODO: fetch more groups via next_token if available
         group_names = groups['deploymentGroups']
         for name in group_names:
-            print " - Group: {}/{}".format(application, name)
+            group = self.conn.get_deployment_group(application, name)
+            info = group['deploymentGroupInfo']
+            style = info['deploymentConfigName']
+            print " - Group: {}/{}  \t\t[{}]".format(application, name, style)
+            # print target revision info
+            if 'targetRevision' in info:
+                target_rev = info['targetRevision']
+                rev_type = target_rev['revisionType']
+                if rev_type and rev_type == 'GitHub':
+                    github_loc = target_rev['gitHubLocation']
+                    print "      Repository: {}".format(github_loc['repository'])
+                    if 'commitId' in github_loc:
+                        print "      Last commit ID: {}".format(github_loc['commitId'])
+            print ""
 
     def list_configs(self):
         cfgs = self.conn.list_deployment_configs()
