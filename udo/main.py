@@ -123,7 +123,7 @@ class Udo:
             print " list deployments"
             print " list configs"
             print " create (group) (commit_id)"
-            print " last"
+            print " last [group]"
             return
         action = args.pop(0)
 
@@ -159,7 +159,12 @@ class Udo:
             dep.create(group, commit_id)
         elif action == 'last':
             dep = deploy.Deploy()
-            dep.print_last_deployment()
+            group = None
+            if len(args) == 1:
+                group = args.pop(0)
+                dep.print_last_deployment(deployment_group_name=group)
+            else:
+                dep.print_last_deployment()
         elif action == 'stop':
             dep = deploy.Deploy()
             dep.stop_deployment()

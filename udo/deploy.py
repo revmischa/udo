@@ -25,13 +25,25 @@ class Deploy:
             self.cfg = _cfg.get_root()
         self.conn = util.deploy_conn()
 
+    def config(self):
+        return self.cfg.get('deploy')
+
+    def app_name(self):
+        application = self.config().get('application')
+        if not application:
+            print "Deployment application not specified or configured"
+            print "Valid applications are:"
+            self.list_applications()
+            return
+
+        return application
+
     def commit_id_display(self, commit_id):
         return commit_id[:10]
 
-
     # create a deployment
     def create(self, group_name, commit_id):
-        cfg = self.cfg.get('deploy')
+        cfg = self.config()
 
         if not 'application' in cfg:
             print "deployment application not specified in deployment configuration"
@@ -74,16 +86,19 @@ class Deploy:
         util.message_integrations(msg)
         self.list_deployments(deployment_id)
 
-    def list_deployments(self, dep_id=None):
-        deps = self.conn.list_deployments()
+    def list_deployments(self, dep_id=None, group=None):
+        deps = self.conn.list_deployments(deployment_group_name=group)
         if dep_id:
             self.print_deployment(dep_id)
         else:
             for dep_id in deps['deployments']:
                 self.print_deployment(dep_id)
 
-    def print_last_deployment(self):
-        deps = self.conn.list_deployments()['deployments']
+    def print_last_deployment(self, **kwargs):
+        application_name = self.app_name()
+        if 'deployment_group_name' in kwargs and not 'application_name' in kwargs:
+            kwargs['application_name'] = application_name
+        deps = self.conn.list_deployments(**kwargs)['deployments']
         if not len(deps):
             print "No deployments found"
             return
@@ -135,14 +150,7 @@ class Deploy:
             print " - Application: {}".format(name)
 
     def list_groups(self, application=None):
-        cfg = self.cfg.get('deploy')
-        if not application and cfg and 'application' in cfg:
-            application = cfg['application']
-        if not application:
-            print "Deployment application not specified or configured"
-            print "Valid applications are:"
-            self.list_applications()
-            return
+        application = self.app_name()
         groups = self.conn.list_deployment_groups(application)
         # TODO: fetch more groups via next_token if available
         group_names = groups['deploymentGroups']
