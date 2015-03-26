@@ -13,15 +13,13 @@ will manage.
 * See: http://boto.readthedocs.org/en/latest/boto_config_tut.html#details
 
 #### Step 2: Install Udo
-`sudo pip install udo`
+* `sudo pip install udo`
 
 #### Step 3: Configure Udo
-```
-# create a config file in our project's directory
-cd path/to/myapp/
-# copy and paste the [sample udo.yml](udo.sample.yml) file and edit it
-emacs udo.yml   # or whatever
-```
+##### create a config file in our project's directory
+* `cd path/to/myapp/`
+##### Copy and paste the [sample udo.yml](udo.sample.yml) file and edit it
+* `emacs udo.yml   # or whatever`
 
 #### Using Udo
 ```
