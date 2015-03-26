@@ -16,10 +16,8 @@ will manage.
 * `sudo pip install udo`
 
 #### Step 3: Configure Udo
-##### create a config file in our project's directory
-* `cd path/to/myapp/`
-##### Copy and paste the [sample udo.yml](udo.sample.yml) file and edit it
-* `emacs udo.yml   # or whatever`
+* Create a config file in our project's directory: `cd path/to/myapp/`
+* Copy and paste the [sample udo.yml](udo.sample.yml) file and edit it
 
 #### Using Udo
 ```
