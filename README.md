@@ -12,7 +12,10 @@ will manage.
 #### Step 1: Configure boto with your AWS credentials
 * See: http://boto.readthedocs.org/en/latest/boto_config_tut.html#details
 
-#### Step 2: Configure Udo
+#### Step 2: Install Udo
+`sudo pip install udo`
+
+#### Step 3: Configure Udo
 ```
 # create a config file in our project's directory
 cd path/to/myapp/
@@ -20,7 +23,6 @@ cd path/to/myapp/
 emacs udo.yml   # replace 'emacs' with 'vim' if you are a simple-minded cretin
 ```
 
-#### Step 3: ... That's it! There's no step 3.
 ```
 # view usage:
 $ udo

@@ -20,11 +20,11 @@ def read(*filenames, **kwargs):
             buf.append(f.read())
     return sep.join(buf)
 
-long_description = read('README.md')
+long_description = "Read the README: https://github.com/revmischa/udo/blob/master/README.md"
 
 setup(
     name='udo',
-    version=udo.__version__,
+    version='1.0.0rc2',
     url='http://github.com/revmischa/udo',
     license='Anyone But RMS',
     author='Mischa Spiegemock',
