@@ -20,7 +20,11 @@ def read(*filenames, **kwargs):
             buf.append(f.read())
     return sep.join(buf)
 
-long_description = "Read the README: https://github.com/revmischa/udo/blob/master/README.md"
+long_description = """
+Udo (Unemployed DevOps) is a friendly command-line tool to manage clusters of Amazon Elastic Compute instances using autoscaling groups.
+If you use Amazon Web Services you probably want to be using Udo.
+Read the README for more information: https://github.com/revmischa/udo/blob/master/README
+"""
 
 setup(
     name='udo',
