@@ -19,12 +19,12 @@ will manage.
 ```
 # create a config file in our project's directory
 cd path/to/myapp/
-# describe our application setup
-emacs udo.yml   # replace 'emacs' with 'vim' if you are a simple-minded cretin
+# copy and paste the [sample udo.yml](udo.sample.yml) file and edit it
+emacs udo.yml   # or whatever
 ```
 
+#### Using Udo
 ```
-# view usage:
 $ udo
 Valid commands are:
   * cluster list - view state of clusters
@@ -124,7 +124,7 @@ If you're using Puppet, Chef, or care about hostnames/IPs, you're almost definit
 Configuration management tools impose extra overhead and complexity for the ability to diff between the state of a running machine and the desired state. This capability is unneeded when you can simply trash the instance and bring a new one up with imperative commands. 
 
 ### Does this work?
-I've been using this in production for a decent length of time with minimal trouble. It's been very handy for managing groups of instances without the need for any special services running on them. We mostly use it for turning QA clusters off when not in use, cleanly reprovisioning instances, and updating launchconfigurations in place on production (something you cannot currently do with the AWS GUI or CLI). 
+We've been using this in production for a decent length of time with minimal trouble. It's been very handy for managing groups of instances without the need for any special services running on them. We mostly use it for turning QA clusters off when not in use, cleanly reprovisioning instances, and updating launchconfigurations in place on production (something you cannot currently do with the AWS GUI or CLI). 
 Several Amazon engineers have reviewed Udo and given it their seal of approval. They said that many companies have similar internal tools, but they don't open-source them. Hopefully this code will save someone some effort and provide a central point where efforts can be focused. 
 
 
