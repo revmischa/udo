@@ -24,7 +24,7 @@ long_description = "Read the README: https://github.com/revmischa/udo/blob/maste
 
 setup(
     name='udo',
-    version='1.0.3',
+    version='1.0.5',
     url='http://github.com/revmischa/udo',
     license='Anyone But RMS',
     author='Mischa Spiegelmock',
