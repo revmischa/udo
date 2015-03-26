@@ -225,7 +225,7 @@ class Udo:
 #####
 
 
-if __name__ == '__main__':
+def invoke_console():
     # argument parsing
     parser = argparse.ArgumentParser(description='Manage AWS clusters.')
     parser.add_argument('cmd', metavar='command', type=str, nargs='?',
@@ -235,9 +235,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     if args.cmd not in dir(Udo):
-        if not args.cmd:
-            args.cmd = ""
-        print "'{}' is not a valid command".format(args.cmd)
+        if args.cmd:
+            print "'{}' is not a valid command".format(args.cmd)
+        else:
+            print "You must specify a command"
         # full command summary
         print """
 Valid commands are:
@@ -266,3 +267,8 @@ Valid commands are:
     exe = Udo()
     method = getattr(exe, args.cmd)
     method(*args.cmd_args)
+
+
+
+if __name__ == '__main__':
+    invoke_console()

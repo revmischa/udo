@@ -4,7 +4,7 @@
 
 You have an application you want to deploy into AWS, taking advantage of all of the cool features and services generously provided by Amazon. You have an interest in doing things the Right Way, and not Reinventing The Wheel. You have some modest level of clue.
 
-Have a look at the [sample configuration](config.sample.yml) to get an idea of what Udo
+Have a look at the [sample configuration](udo.sample.yml) to get an idea of what Udo
 will manage.
 
 ## Quickstart:  
@@ -14,15 +14,16 @@ will manage.
 
 #### Step 2: Configure Udo
 ```
-# describe our application clusters
-cp config.sample.yml config.yml
-emacs config.yml   # replace 'emacs' with 'vim' if you are a simple-minded cretin
+# create a config file in our project's directory
+cd path/to/myapp/
+# describe our application setup
+emacs udo.yml   # replace 'emacs' with 'vim' if you are a simple-minded cretin
 ```
 
 #### Step 3: ... That's it! There's no step 3.
 ```
 # view usage:
-$ script/udo
+$ udo
 Valid commands are:
   * cluster list - view state of clusters
   * cluster status - view state of a cluster
@@ -44,10 +45,10 @@ Valid commands are:
 $ cluster activate dev webapp
 
 # display our application launchconfig cloud-init script for the dev/webapp role
-$ script/udo lc cloudinit dev webapp   
+$ udo lc cloudinit dev webapp   
 
 # terminates all instances in the qa-webapp group via scaling policy, deletes ASgroup and LC
-$ $ script/udo asg deactivate qa webapp
+$ $ udo asg deactivate qa webapp
 Deleting... this may take a few minutes...
 . . . . . . . . . . . .
 Deleted ASgroup qa-webapp
@@ -55,7 +56,7 @@ Deleting launchconfig...
 Deleted LaunchConfig qa-webapp
 
 # delete and recreate ASgroup, super easy brain-dead way to reprovision a cluster
-$ script/udo asg reload prod worker
+$ udo asg reload prod worker
 Are you sure you want to tear down the prod-worker ASgroup and recreate it? (y/n) y
 Reloading ASgroup prod-worker
 Deleting... this may take a few minutes...
@@ -70,20 +71,20 @@ AZs: ['us-west-2a', 'us-west-2b']
 Activated ASgroup prod-worker
 
 # change asgroup desired instance capacity
-$ script/udo asg scale prod worker 10
+$ udo asg scale prod worker 10
 Cannot scale: 10 is greater than max_size (7)
 Increase max_size to 10? (y/n) y
 Changed ASgroup prod-worker desired_capacity from 4 to 10
 
 # deploy with CodeDeploy
-$ script/udo deploy list groups
+$ udo deploy list groups
  - Group: MyCompany/stage
-$ script/udo deploy create stage 740800da74f1ebee37ed1ee         
+$ udo deploy create stage 740800da74f1ebee37ed1ee         
 Deploying commit 750800da74 to deployment group: stage
  - MyCompany/stage
      Created: Friday, 30. January 2015 10:56PM
      Status: InProgress
-$ script/udo deploy list deployments
+$ udo deploy list deployments
  - MyCompany/stage
      Created: Friday, 30. January 2015 10:56PM
      Status: Success
@@ -97,7 +98,7 @@ $ script/udo deploy list deployments
 < UdoBot> Activated ASgroup prod-worker
 
 # update launchconfig for an existing autoscaling group (bonus feature not provided by AWS or boto)
-$ script/udo asg updatelc dev webapp
+$ udo asg updatelc dev webapp
 ```
 
 ## What's all this then, eh?

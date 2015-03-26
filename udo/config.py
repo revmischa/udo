@@ -1,6 +1,7 @@
 import yaml
 from pprint import pprint
 import os
+import sys
 
 """
 This class provides an interface into the entire AWS configuration.
@@ -27,16 +28,21 @@ how2use:
 
 # class method
 def load():
-    _path = "config.yml"
+    file_path = get_config_file_path()
     try:
-        f = open(_path, 'r')
+        f = open(file_path, 'r')
     except IOError as e:
-        print "Failed opening file {}: {}".format(_path, os.strerror(e.errno))
+        print "Failed opening file {}: {}".format(file_path, os.strerror(e.errno))
         return None
     contents = f.read()
     f.close()
     return parse(contents)
 
+def get_config_file_path():
+    # look for config file in current working directory
+    cwd = os.getcwd()
+    path = cwd + "/" + "udo.yml"
+    return path    
 
 # given a YAML string, parse it into a python data structure
 def parse(config_yaml):
@@ -51,6 +57,12 @@ class Config:
             self._root = root
         else:
             self._root = load()
+
+        if not self._root:
+            # loading config failed, can't proceed
+            print "No udo.yml configuration file was found."
+            print "Please create one or change to the directory containing your configuration."
+            sys.exit(1)
 
     def clone(self):
         return Config(self._root)

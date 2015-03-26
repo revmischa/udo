@@ -25,25 +25,30 @@ long_description = read('README.md')
 setup(
     name='udo',
     version=udo.__version__,
-    url='http://github.com/doctorbase/udo/',
+    url='http://github.com/revmischa/udo',
     license='Anyone But RMS',
     author='Mischa Spiegemock',
     tests_require=['pytest'],
     install_requires=[
-        'Boto>=2.0.0',
+        'Boto>=2.36.0',
         'PyYAML',
         'parallel-ssh',
     ],
     author_email='revmischa@cpan.org',
-    description='Automate AWS deployments',
+    description='Automate AWS Deployments',
     long_description=long_description,
     packages=['udo'],
     include_package_data=True,
     platforms='any',
     test_suite='tests',
-    scripts=['udo'],
+    entry_points={
+        'console_scripts': [
+            'udo = udo.main:invoke_console',
+        ],
+    },
+    keywords='devops aws amazon autoscaling orchestration',
     classifiers=[
         'Programming Language :: Python',
-        # ....
+        'Topic :: System :: Systems Administration'
     ]
 )
