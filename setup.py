@@ -23,12 +23,12 @@ def read(*filenames, **kwargs):
 long_description = """
 Udo (Unemployed DevOps) is a friendly command-line tool to manage clusters of Amazon Elastic Compute instances using autoscaling groups.
 If you use Amazon Web Services you probably want to be using Udo.
-Read the README for more information: https://github.com/revmischa/udo/blob/master/README
+Read the README for more information: https://github.com/revmischa/udo/blob/master/README.md
 """
 
 setup(
     name='udo',
-    version='1.0.5',
+    version='1.0.6',
     url='http://github.com/revmischa/udo',
     license='Anyone But RMS',
     author='Mischa Spiegelmock',
