@@ -24,10 +24,10 @@ long_description = "Read the README: https://github.com/revmischa/udo/blob/maste
 
 setup(
     name='udo',
-    version='1.0.2',
+    version='1.0.3',
     url='http://github.com/revmischa/udo',
     license='Anyone But RMS',
-    author='Mischa Spiegemock',
+    author='Mischa Spiegelmock',
     tests_require=['pytest'],
     install_requires=[
         'Boto>=2.36.0',

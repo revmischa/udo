@@ -1,4 +1,7 @@
-# Sample cluster configuration for AWS
+# Sample Udo configuration file
+
+# You should copy this into your application's root 
+# directory and name it udo.yml
 
 
 # what's your awesome application or company called?
