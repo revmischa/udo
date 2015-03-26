@@ -24,7 +24,7 @@ long_description = "Read the README: https://github.com/revmischa/udo/blob/maste
 
 setup(
     name='udo',
-    version='1.0.0rc2',
+    version='1.0.2',
     url='http://github.com/revmischa/udo',
     license='Anyone But RMS',
     author='Mischa Spiegemock',
@@ -32,7 +32,7 @@ setup(
     install_requires=[
         'Boto>=2.36.0',
         'PyYAML',
-        'parallel-ssh',
+        # 'parallel-ssh',
     ],
     author_email='revmischa@cpan.org',
     description='Automate AWS Deployments',
