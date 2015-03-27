@@ -92,7 +92,7 @@ class LaunchConfig:
     # processes the cloud-init template, returns a string
     def cloud_init_script(self):
         # load cloud-init script template
-        cloud_init_template = LCTemplate(cloud_init_template)
+        cloud_init_template = LCTemplate(cloud_init_script)
 
         cloud_init_config = _cfg.get_root()
 
