@@ -168,6 +168,12 @@ class Udo:
         elif action == 'stop':
             dep = deploy.Deploy()
             dep.stop_deployment()
+        elif len(args) == 1:
+            # let's just assume we wanna create a deployment
+            group = action
+            commit_id = args.pop(0)
+            dep = deploy.Deploy()
+            dep.create(group, commit_id)
         else:
             print "Unknown deploy command: {}".format(action)
 
