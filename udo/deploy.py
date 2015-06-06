@@ -123,7 +123,7 @@ class Deploy:
         status = info['status']
         rev_info = info['revision']
         create_time = datetime.fromtimestamp(info['createTime'])
-        create_time_display = create_time.strftime("%A, %d. %B %Y %I:%M%p")
+        create_time_display = create_time.strftime("%A, %d %B %Y %I:%M%p %Z")
         commit_id = 'unknown'
         #print dep
         msg = ""
