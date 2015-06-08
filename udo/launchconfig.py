@@ -24,6 +24,9 @@ cloud_init_script = '''
 # Initialize a base system, provision via RPM installation
 # Read by LaunchConfig
 
+CLUSTER_NAME="@cluster_name"
+ROLE_NAME="@role_name"
+
 # Our stuff goes in here
 BOOTSTRAP_DIR=/root/.udo
 mkdir -p $BOOTSTRAP_DIR
@@ -50,11 +53,14 @@ fi
 # load up repo metadata
 yum makecache
 
+# your stuff from cloud_init config
+# pre-package-setup
+@cloud_init_pre
+
+######
+
 # install updates
 yum update -y
-
-# your stuff from cloud_init config
-@cloud_init_extra
 
 ## install packages
 # base system
@@ -66,6 +72,8 @@ if [[ -n "@role_packages" ]]; then
     yum install -y @role_packages
 fi
 
+# custom post-init hook
+@cloud_init_post
 
 
 # might not be a bad idea to reboot after updating everything?
@@ -104,7 +112,11 @@ class LaunchConfig:
         cloud_init_config['repo_url'] = self.role_config.get('repo_url') or ''
 
         # append extra commands from config
-        cloud_init_config['cloud_init_extra'] = _cfg.get('cloud_init') or ''
+        cloud_init_config['cloud_init_pre'] = _cfg.get('cloud_init') or _cfg.get('cloud_init_pre') or ''
+        cloud_init_config['cloud_init_post'] = _cfg.get('cloud_init_post') or ''
+
+        cloud_init_config['cluster_name'] = _cfg.get('cluster_name') or ''
+        cloud_init_config['role_name'] = _cfg.get('role_name') or ''
 
         cloud_init = cloud_init_template.substitute(**cloud_init_config)
         return cloud_init
