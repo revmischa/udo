@@ -2,6 +2,7 @@
 
 import config
 import boto
+import boto.ec2
 import json
 import urllib2
 from time import sleep
@@ -35,6 +36,12 @@ def as_conn():
     args = connection_args()
     region = args.pop('region')
     return boto.ec2.autoscale.connect_to_region(region.name, **args)
+
+# ec2 connection
+def ec2_conn():
+    args = connection_args()
+    region = args.pop('region')
+    return boto.ec2.connect_to_region(region.name, **args)
 
 # codedeploy connection
 def deploy_conn():

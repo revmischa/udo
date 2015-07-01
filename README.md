@@ -13,7 +13,7 @@ will manage.
 * See: http://boto.readthedocs.org/en/latest/boto_config_tut.html#details
 
 #### Step 2: Install Udo
-* `sudo pip install udo`
+* `cd tmp; sudo pip install udo`
 
 #### Step 3: Configure Udo
 * Create a config file in our project's directory: `cd path/to/myapp/`

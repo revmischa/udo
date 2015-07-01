@@ -4,6 +4,7 @@ import sys
 import warnings
 import os
 import argparse
+import random
 from pprint import pprint
 
 import cluster
@@ -71,12 +72,13 @@ class Udo:
         else:
             print "Unrecognized launchconfig action"
 
-
     # autoscale
     def asg(self, *args):
         args = list(args)
         if not len(args) or not args[0]:
             print "asgroup command requires an action. Valid actions are: "
+            print " instances (cluster) (role) - list instances in group"
+            print " randomip (cluster) (role) - get an IP address of a host in the group"
             print " create (cluster) (role) - create an autoscale group"
             print " destroy (cluster) (role) - delete an autoscale group and terminate all instances"
             print " reload (cluster) (role) - destroys asgroup and launchconfig, then recreates them"
@@ -102,6 +104,11 @@ class Udo:
             ag.reload()
         elif action == 'updatelc':
             ag.update_lc()
+        elif action == 'instances':
+            ag.print_instances()
+        elif action == 'randomip':
+            ips = ag.ip_addresses()
+            print(random.choice(ips))
         elif action == 'scale':
             # get scale arg
             if extra:
@@ -188,11 +195,10 @@ class Udo:
 
     def get_cluster_and_role_from_args(self, *args):
         args = list(args)
-
         # need cluster/role
         if len(args) < 1:
             print "Please specify cluster name for this command"
-            return None,None
+            return None,None,None
         cluster = args.pop(0)
 
         # use role name if specified, otherwise assume they meant the obvious thing
@@ -203,7 +209,7 @@ class Udo:
             roles = config.get_cluster_config(cluster).get('roles')
             if not roles:
                 print "Cluster config for {} not found".format(cluster)
-                return None,None
+                return None,None,None
 
             rolenames = roles.keys()
             if len(rolenames) == 1:
@@ -214,7 +220,7 @@ class Udo:
                 print "Multiple roles available for cluster {}".format(cluster)
                 for r in rolenames:
                     print "  - {}".format(r)
-                return None,None
+                return None,None,None
 
         # still stuff?
         extra = None
@@ -248,11 +254,13 @@ Valid commands are:
   * lc cloudinit - display cloud-init script
   * lc create - create a launch configuration
   * lc destroy - delete a launch configuration
+  * asg instances - print instances in autoscaling groups
   * asg reload - destroy and create an autoscaling group to update the config
   * asg create - create an autoscaling group
   * asg destroy - delete an autoscaling group
   * asg updatelc - updates launchconfiguration in-place
   * asg scale - set desired number of instances
+  * asg randomip - print IP address of random host in group
   * deploy list apps - view CodeDeploy applications
   * deploy list groups - view CodeDeploy application deployment groups
   * deploy list deployments - view CodeDeploy deployment statuses

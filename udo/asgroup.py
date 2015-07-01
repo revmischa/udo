@@ -209,3 +209,41 @@ class AutoscaleGroup:
             propagate_at_launch=True,
             resource_id=ag.name
         )
+
+    def get_instances(self):
+        ret = []
+        done = False
+        next_token = None
+        while not done:
+            params = {}
+            if next_token:
+                params["next_token"] = next_token
+            all_instances = self.conn.get_all_autoscaling_instances(**params)
+            next_token = all_instances.next_token
+            if not next_token:
+                done = True
+
+            instances = [i for i in all_instances if i.group_name == self.name()]
+            ret.extend(instances)
+
+        return ret
+
+    def print_instances(self):
+        instances = self.get_instances()
+        print("Group\t\tID\t\tState\t\tStatus")
+        for instance in instances:
+            status = instance.health_status
+            lcname = instance.launch_config_name
+            state = instance.lifecycle_state
+            group = instance.group_name
+            iid = instance.instance_id
+            print("{}\t{}\t{}\t{}".format(group, iid, state, status))
+
+
+    def ip_addresses(self):
+        instances = self.get_instances()
+        ids = [i.instance_id for i in instances]
+        ec2_conn = util.ec2_conn()
+        ec2_instances = ec2_conn.get_only_instances(ids)
+        ips = [i.ip_address for i in ec2_instances]
+        return ips
