@@ -33,18 +33,32 @@ slack:
     username: UdoBot
     channel: '#notdevops'
 
-# add some additional cloud-init script commands
-# (see script/cloud-init.sh)
-cloud_init: |
+
+
+### CLOUD-INIT
+
+# note: cloud_init_* is baked into LaunchConfigurations.
+# to apply changes you must reload your LaunchConfigurations
+# or use the 'update-lc' command
+
+# add some additional cloud-init script commands before installing packages
+cloud_init_pre: |
     touch /root/myapp_init
     # install AWS CLI tools
     yum install -y aws-cli
+
+# run after your packages are installed
+# note: it's a good idea to install the CodeDeploy agent last, because
+# autoscaling lifecycle hooks to deploy on instance creation will do a
+# deploy straight away, so you want your dependencies in place when that happens
+cloud_init_post: |
     # install CodeDeploy agent
     cd /home/ec2-user
     aws s3 cp s3://aws-codedeploy-us-west-2/latest/install . --region us-west-2
     chmod +x ./install
     ./install auto
     rm install
+
 
 # CodeDeploy
 # 'application' and 'group' should reference existing configurations
