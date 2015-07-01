@@ -25,18 +25,23 @@ $ udo
 Valid commands are:
   * cluster list - view state of clusters
   * cluster status - view state of a cluster
-  * cluster activate - create a VPC
+  * cluster create - create a VPC
   * lc cloudinit - display cloud-init script
-  * lc activate - create a launch configuration
-  * lc deactivate - delete a launch configuration
-  * asg reload - deactivate and activate an autoscaling group to update the config
-  * asg activate - create an autoscaling group
-  * asg deactivate - delete an autoscaling group
+  * lc create - create a launch configuration
+  * lc destroy - delete a launch configuration
+  * asg instances - print instances in autoscaling groups
+  * asg reload - destroy and create an autoscaling group to update the config
+  * asg create - create an autoscaling group
+  * asg destroy - delete an autoscaling group
   * asg updatelc - updates launchconfiguration in-place
-  * asg scale - set number of desired instances in autoscaling group
-  * deploy list - view CodeDeploy configuration and status
-  * deploy create - create new revision deployment
-  * deploy last - view last deployment status
+  * asg scale - set desired number of instances
+  * asg randomip - print IP address of random host in group
+  * deploy list apps - view CodeDeploy applications
+  * deploy list groups - view CodeDeploy application deployment groups
+  * deploy list deployments - view CodeDeploy deployment statuses
+  * deploy list configs - view CodeDeploy configurations
+  * deploy create (group) (commit) - create new deployment for commit on group
+  * deploy last - shows status of most recent deployment
   * deploy stop - cancel last deployment
 
 # create a VPC from our config by name
@@ -86,6 +91,19 @@ $ udo deploy list deployments
  - MyCompany/stage
      Created: Friday, 30. January 2015 10:56PM
      Status: Success
+
+# get random IP of an instance in a cluster
+# (very handy for SSH)
+$ udo asg randomip qa webapp
+52.27.24.11
+
+# view cluster status
+asg instances stage webapp
+Group         ID          State     Status
+stage-webapp  i-565272b1  InService HEALTHY
+stage-webapp  i-515272af  InService HEALTHY
+stage-webapp  i-e5584916  InService HEALTHY
+stage-webapp  i-e1581917  InService HEALTHY
 
 # bonus slack notifications (if configured)
 < UdoBot> Changed ASgroup prod-worker desired_capacity from 4 to 10
