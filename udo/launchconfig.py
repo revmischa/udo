@@ -115,7 +115,7 @@ class LaunchConfig:
         cloud_init_config['cloud_init_pre'] = _cfg.get('cloud_init') or _cfg.get('cloud_init_pre') or ''
         cloud_init_config['cloud_init_post'] = _cfg.get('cloud_init_post') or ''
 
-        cloud_init_config['cluster_name'] = _self.cluster_name or ''
+        cloud_init_config['cluster_name'] = self.cluster_name or ''
         cloud_init_config['role_name'] = self.role_name or ''
 
         cloud_init = cloud_init_template.substitute(**cloud_init_config)
