@@ -55,10 +55,11 @@ class AutoscaleGroup:
         lc = launchconfig.LaunchConfig(self.cluster_name, self.role_name)
         if self.exists():
             asgroup = self.get_asgroup()
-            #pprint(asgroup)
-            #sys.exit(1)
             if not asgroup:
-                return None  # this might be a race condition between exists() and get_asgroup()
+                # NOTE:
+                # this might be a race condition between 
+                # exists() and get_asgroup()
+                return None
             blc = asgroup['LaunchConfigurationName']
             #if blc:
             #    lc.set_name(blc)
@@ -86,18 +87,12 @@ class AutoscaleGroup:
 
     # we can't modify a launchconfig in place, we have to create
     # a new one and set that as our lc
-    #
-    # tested with
-    #
-    # python udo/main.py asg updatelc qa webapp
-    # 
     def update_lc(self):
         debug("In asgroup.py update_lc")
         oldlc = self.lc()
         #
         # NOTE:  Why does this try to delete the LaunchConfig ?
         lc = oldlc.update() # get new version
-        #sys.exit(1)
 
         asgroup = self.get_asgroup() # set lc
         asg_name = asgroup['AutoScalingGroupName']
@@ -107,8 +102,7 @@ class AutoscaleGroup:
         client = util.as_conn()
         debug("updating asg: " + asg_name + " with LaunchConfig " + lcname)
 
-        response = client.update_auto_scaling_group( AutoScalingGroupName = asg_name,
-                                                     LaunchConfigurationName = lcname )
+        response = client.update_auto_scaling_group( AutoScalingGroupName = asg_name, LaunchConfigurationName = lcname )
 
         # delete old
         conn = util.as_conn()
@@ -150,7 +144,6 @@ class AutoscaleGroup:
             if not util.confirm("Increase max_size to {}?".format(desired)):
                 return
             asgroup['MaxSize'] = desired
-
         current = asgroup['DesiredCapacity']
 
         # Set DesiredCapacity
@@ -178,9 +171,11 @@ class AutoscaleGroup:
         # NOTE
         # deleting asg logic should be in its own function
 
-        # delete ASG and launchconfig . reducing capacities of asg to 0
-        # all around terminates the VMs in the ASG
+        # * delete ASG by reducing capacities of asg to 0
+        # * delete launchconfig
         #
+        # reducing ASG capacities to 0 triggers eventual instance
+        # termination
         debug("In asgroup.py deactivate")        
 
         asg_name = self.name()
@@ -200,11 +195,11 @@ class AutoscaleGroup:
                 response = ag.delete_auto_scaling_group( AutoScalingGroupName=asg_name )
                 util.message_integrations("Deleted ASgroup {}".format(asg_name))
             else:
-                pprint("There are " + str(num_instances) + " instances that need to be removed from asg: " + asg_name)
-                pprint("terminating instances in asg: " + asg_name)
-                pprint("by setting to 0 MinSize, MaxSize, DesiredCapacity")
+                debug("There are " + str(num_instances) + " instances that need to be removed from asg: " + asg_name)
+                debug("terminating instances in asg: " + asg_name)
+                debug("by setting to 0 MinSize, MaxSize, DesiredCapacity")
                 response = ag.update_auto_scaling_group(AutoScalingGroupName = asg_name, MinSize=0, MaxSize=0, DesiredCapacity=0)
-                pprint("Waiting 30 seconds to give AWS time to terminate the instances")
+                debug("Waiting 30 seconds to give AWS time to terminate the instances")
                 try:
                     sleep(30)
                 except KeyboardInterrupt:
@@ -217,7 +212,8 @@ class AutoscaleGroup:
                             raise ValueError("there are still instances in the ASG")
                             break
                         else:
-                            # if num instances in asg is 0, we are clear to delete
+                            # if num instances in asg is 0,
+                            # we are clear to delete
                             break
                     except KeyboardInterrupt:
                         pprint("Got impatient")
@@ -263,7 +259,6 @@ class AutoscaleGroup:
     #
     # creates the LaunchConfig
     def activate(self):
-        pprint("wave hands")
         debug("In asgroup.py activate")
         conn = util.as_conn()
         cfg = self.role_config
@@ -317,10 +312,7 @@ class AutoscaleGroup:
                 VPCZoneIdentifier = subnet_ids_string,
             )
 
-        # should check if asg was created, here
-        # if not conn.create_auto_scaling_group(ag):
-        #    print "Failed to create autoscale group"
-        #    return False
+        # NOTE: should check if asg was created
 
         debug('Preparing tags that will be applied to the asg')
         tags = cfg.get('tags')

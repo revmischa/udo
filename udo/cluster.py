@@ -72,6 +72,9 @@ class Cluster:
         }
     
     # active this cluster
+    #
+    # NOTE: this might not work right
+    # We might get rid of cluster.py completely
     def activate(self):
         debug("In cluster.py activate")
         conn = vpc_conn()
