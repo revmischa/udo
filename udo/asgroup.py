@@ -1,15 +1,15 @@
+import boto3
+import sys
+import time
+from pprint import pprint
+
 import config
 import util
 import launchconfig
 import cluster
 
-from pprint import pprint
-
-import boto
-from boto.ec2.autoscale import AutoScaleConnection
-from boto.ec2.autoscale import AutoScalingGroup
-from boto.ec2.autoscale import ScalingPolicy
-from boto.ec2.autoscale import Tag
+from time import sleep
+from util import debug
 
 _cfg = config.Config()
 
@@ -21,46 +21,54 @@ class AutoscaleGroup:
         self.conn = util.as_conn()
 
     def name(self):
+        debug("In asgroup.py name")
         return "-".join([self.cluster_name, self.role_name])
 
     def exists(self):
+        debug("In asgroup.py exists")
         asg = self.get_asgroup()
         if asg:
             return asg
         return False
 
     def find_vpc_subnet_by_cidr(self, cidr):
+        debug("In asgroup.py find_vpc_subnet_by_cidr")
         vpc = cluster.get_vpc_by_name(self.cluster_name)
         if not vpc:
             print "Failed to find VPC {}".format(self.cluster_name)
             return None
         # look for subnet that matches
-        subnets = cluster.vpc_conn().get_all_subnets(
-            filters=[
-                ('cidrBlock', cidr),
-                ('vpcId', vpc.id),
-            ],
-        )
-        if len(subnets):
-            return subnets[0]
-        print "Failed to find subnet {}".format(cidr)
-        return None
+        vpc_iterator = cluster.vpc_conn()
+        vpc = None
+        for _vpc in vpc_iterator:
+          if _vpc.cidr_block == cidr:
+              vpc = _vpc
+        if not vpc:
+            pprint("unable to find vpc with cidr " + str(cidr))
+            return None
+        return vpc
 
     # returns LaunchConfig for this ASgroup
     # may or may not exist
     def lc(self):
+        debug("In asgroup.py lc")
         lc = launchconfig.LaunchConfig(self.cluster_name, self.role_name)
         if self.exists():
             asgroup = self.get_asgroup()
+            #pprint(asgroup)
+            #sys.exit(1)
             if not asgroup:
                 return None  # this might be a race condition between exists() and get_asgroup()
-            blc = asgroup.launch_config_name
-            if blc:
+            blc = asgroup['LaunchConfigurationName']
+            #if blc:
+            #    lc.set_name(blc)
+            if 'LaunchConfigurationName' in blc:
                 lc.set_name(blc)
         return lc
 
     # returns true if the LC exists
     def activate_lc(self):
+        debug("In asgroup.py activate_lc")
         # make sure we have a launchconfig activated
         lc = self.lc()
         if not lc:
@@ -78,115 +86,243 @@ class AutoscaleGroup:
 
     # we can't modify a launchconfig in place, we have to create
     # a new one and set that as our lc
+    #
+    # tested with
+    #
+    # python udo/main.py asg updatelc qa webapp
+    # 
     def update_lc(self):
+        debug("In asgroup.py update_lc")
         oldlc = self.lc()
-        # get new version
-        lc = oldlc.update()
-        # set lc
-        asgroup = self.get_asgroup()
+        #
+        # NOTE:  Why does this try to delete the LaunchConfig ?
+        lc = oldlc.update() # get new version
+        #sys.exit(1)
+
+        asgroup = self.get_asgroup() # set lc
+        asg_name = asgroup['AutoScalingGroupName']
+
         lcname = lc.name()
-        setattr(asgroup, 'launch_config_name', lcname)
-        asgroup.update()
+        
+        client = util.as_conn()
+        debug("updating asg: " + asg_name + " with LaunchConfig " + lcname)
+
+        response = client.update_auto_scaling_group( AutoScalingGroupName = asg_name,
+                                                     LaunchConfigurationName = lcname )
+
         # delete old
         conn = util.as_conn()
         if oldlc.name() is not lcname:
-            util.retry(lambda: conn.delete_launch_configuration(oldlc.name()), 60)
+            debug("deleting Launchconfig " + oldlc.name())
+            conn.delete_launch_configuration ( LaunchConfigurationName = oldlc.name() )
 
     def get_asgroup(self):
+        debug("In asgroup.py get_asgroup")
         conn = util.as_conn()
-        ags = conn.get_all_groups(names = [self.name()])
-        if not len(ags):
+        asg = conn.describe_auto_scaling_groups( AutoScalingGroupNames = [ self.name() ] )
+        if not asg['AutoScalingGroups']:
             return None
-        return ags[0]
+        else:
+            asg = asg['AutoScalingGroups'][0]
+        return asg
+
+    def get_num_instances(self):
+        ag = util.as_conn()
+        asg_info = ag.describe_auto_scaling_groups( AutoScalingGroupNames = [ self.name() ] )
+        return len(asg_info['AutoScalingGroups'][0]['Instances'])
 
     # get desired_size
     def get_scale_size(self):
+        debug("In asgroup.py get_scale_size")
         asgroup = self.get_asgroup()
-        print "Desired: {}\nMin:{}\nMax:{}".format(asgroup.desired_capacity, asgroup.min_size, asgroup.max_size)
+        print "Desired: {}\nMin:{}\nMax:{}".format(asgroup['DesiredCapacity'], asgroup['MinSize'], asgroup['MaxSize'])
 
     # set desired_size
     def scale(self, desired):
+        debug("In asgroup.y scale")
         asgroup = self.get_asgroup()
 
-        if desired < asgroup.min_size:
-            print "Cannot scale: {} is lower than min_size ({})".format(desired, asgroup.min_size)
+        if desired < asgroup['MinSize']:
+            print "Cannot scale: {} is lower than min_size ({})".format(desired, asgroup['MinSize'])
             return
-        if desired > asgroup.max_size:
-            print "Cannot scale: {} is greater than max_size ({})".format(desired, asgroup.max_size)
+        if desired > asgroup['MaxSize']:
+            print "Cannot scale: {} is greater than max_size ({})".format(desired, asgroup['MaxSize'])
             if not util.confirm("Increase max_size to {}?".format(desired)):
                 return
-            asgroup.max_size = desired
+            asgroup['MaxSize'] = desired
 
-        current = asgroup.desired_capacity
-        asgroup.desired_capacity = desired
-        asgroup.update()
+        current = asgroup['DesiredCapacity']
+
+        # Set DesiredCapacity
+        response = util.as_conn().set_desired_capacity( AutoScalingGroupName = self.name(), DesiredCapacity = desired )
+
+        # Check if DesiredCapacity was changed
+        pprint("in asgroup.py scale: running 'asgroup = self.get_asgroup()'")
         asgroup = self.get_asgroup()
-        new = asgroup.desired_capacity
+        new = asgroup['DesiredCapacity']
         if (new != current):
             msg = "Changed ASgroup {} desired_capacity from {} to {}".format(self.name(), current, new)
             util.message_integrations(msg)
 
-    # kill of ASgroup and recreate it
+    # kill off asg and recreate it
     def reload(self):
+        debug("In asgroup.py reload")
         if not util.confirm("Are you sure you want to tear down the {} ASgroup and recreate it?".format(self.name())):
             return
         util.message_integrations("Reloading ASgroup {}".format(self.name()))
         self.deactivate()
-        util.retry(lambda: self.activate(), 60)
+        #util.retry(lambda: self.activate(), 60)
+        self.activate()
 
-    def deactivate(self):
-        if not self.exists():
-            return
-        ag = self.get_asgroup()
-        ag.min_size = 0
-        ag.max_size = 0
-        ag.desired_capacity = 0
-        ag.update()
-        ag.shutdown_instances()
-        print "Deleting... this may take a few minutes..."
-        if util.retry(lambda: ag.delete(), 500):
-            util.message_integrations("Deleted ASgroup {}".format(self.name()))
-            # delete launchconfig too
-            lc = self.lc()
-            lc.deactivate()
+    def deactivate(self): # a.k.a asg destroy
+        # NOTE
+        # deleting asg logic should be in its own function
+
+        # delete ASG and launchconfig . reducing capacities of asg to 0
+        # all around terminates the VMs in the ASG
+        #
+        debug("In asgroup.py deactivate")        
+
+        asg_name = self.name()
+        ag = util.as_conn()
+        ec2 = util.ec2_conn()
+    
+        asg_info = ag.describe_auto_scaling_groups( AutoScalingGroupNames = [ asg_name ] )
+
+        if not asg_info['AutoScalingGroups']:
+            print("ASG does not exist.  Maybe it was already deleted? ")
         else:
-            util.message_integrations("Failed to delete ASgroup {}".format(self.name()))
+            # delete the ASG
+            num_instances = len(asg_info['AutoScalingGroups'][0]['Instances'])
+            if self.get_num_instances() == 0:
+                pprint("There are no instances in asg: " + asg_name)
+                pprint("Deleting asg: " + asg_name)
+                response = ag.delete_auto_scaling_group( AutoScalingGroupName=asg_name )
+                util.message_integrations("Deleted ASgroup {}".format(asg_name))
+            else:
+                pprint("There are " + str(num_instances) + " instances that need to be removed from asg: " + asg_name)
+                pprint("terminating instances in asg: " + asg_name)
+                pprint("by setting to 0 MinSize, MaxSize, DesiredCapacity")
+                response = ag.update_auto_scaling_group(AutoScalingGroupName = asg_name, MinSize=0, MaxSize=0, DesiredCapacity=0)
+                pprint("Waiting 30 seconds to give AWS time to terminate the instances")
+                try:
+                    sleep(30)
+                except KeyboardInterrupt:
+                    pprint("Got impatient.")
+                interval = 10
+                tries = 20
+                for x in range(0,tries):
+                    try:
+                        if self.get_num_instances() != 0:
+                            raise ValueError("there are still instances in the ASG")
+                            break
+                        else:
+                            # if num instances in asg is 0, we are clear to delete
+                            break
+                    except KeyboardInterrupt:
+                        pprint("Got impatient")
+                    except ValueError as e:
+                        pprint(e)
+                        pass
 
+                    try:
+                        if e:
+                            pprint("pausing " + str(interval) + " seconds")
+                            sleep(interval)
+                        else:
+                            break
+                    except KeyboardInterrupt:
+                        pprint("Got impatient")
+       
+                if self.get_num_instances() == 0 or not self.get_num_instances():
+                    pprint("instances in asg deleted.")
+                    response = ag.delete_auto_scaling_group( AutoScalingGroupName=asg_name )
+                    util.message_integrations("Deleted ASgroup {}".format(asg_name))
+                else:
+                    pprint("unable to delete instances in asg.")
+
+        # if launch config exists, delete it 
+        lc = self.lc()
+        if not lc.exists():
+            print("launchconfig does not exist.  Maybe you deleted it already?")
+        else:
+            lc.deactivate()
+
+    def get_subnet_ids_by_cidrs(self, cidrs):
+        debug("In asgroup.y get_subnet_ids_by_cidrs")
+        ret = []
+        _ec2 = util.ec2_conn()
+        subnets = _ec2.describe_subnets()['Subnets']
+        for cidr in cidrs:
+            for subnet in subnets:
+                if subnet['CidrBlock'] == cidr:
+                    ret.append(subnet['SubnetId'])
+        return ret
+
+    # NOTE: Need to test with multiple availability zones and multiple subnet ids
+    #
     # creates the LaunchConfig
     def activate(self):
+        pprint("wave hands")
+        debug("In asgroup.py activate")
         conn = util.as_conn()
         cfg = self.role_config
         name = self.name()
-
-        # ensure this LC already exists
-        if not self.activate_lc():
+        if not self.activate_lc(): # ensure this LaunchConfig already exists
             return False
 
-        # look up subnet id
-        subnets = [self.find_vpc_subnet_by_cidr(cidr) for cidr in cfg.get('subnets_cidr')]
-        if not subnets or not len(subnets) or None in subnets:
+        subnet_cidrs = cfg.get('subnets_cidr')
+        if not subnet_cidrs or not len(subnet_cidrs) or None in subnet_cidrs:
             print "Valid subnets_cidr are required for {}/{}".format(self.cluster_name, self.role_name)
             return False
-        print "Using subnets {}".format(", ".join([s.id for s in subnets]))
-        print "AZs: {}".format(cfg.get('availability_zones'))
+        print("Using subnets " + str(subnet_cidrs))
 
-        # does the ASgroup already exist?
-        ag = AutoScalingGroup(
-            group_name=self.name(),
-            load_balancers=cfg.get('elbs'),
-            availability_zones=cfg.get('availability_zones'),
-            vpc_zone_identifier=[s.id for s in subnets],
-            launch_config=self.lc().name(),
-            desired_capacity=cfg.get('scale_policy', 'desired'),
-            min_size=cfg.get('scale_policy', 'min_size'),
-            max_size=cfg.get('scale_policy', 'max_size'),
-        )
+        subnet_ids = self.get_subnet_ids_by_cidrs(subnet_cidrs)
+        azs=cfg.get('availability_zones')
+        if not azs:
+            pprint("No availability_zones set")
+        else:
+            print "AZs: {}".format(availability_zones)
+    
+       # VPCZoneIdentifier ( which can be plural ) takes a string
+        subnet_ids_string=''
+        _length = len(subnet_ids)
+        for subnet_id in subnet_ids:
+            subnet_ids_string=subnet_ids_string + subnet_id
+            if _length > 1:
+                subnet_ids_string=subnet_ids_string + ', '
+            _length = _length - 1
+        pprint("Using subnet ids: " + str(subnet_ids_string))
 
-        if not conn.create_auto_scaling_group(ag):
-            print "Failed to create autoscale group"
-            return False
+        if not azs:
+            response = conn.create_auto_scaling_group(
+                AutoScalingGroupName = self.name(),
+                LoadBalancerNames = cfg.get('elbs'),
+                LaunchConfigurationName = self.lc().name(),
+                MinSize = cfg.get('scale_policy', 'min_size'),
+                MaxSize = cfg.get('scale_policy', 'max_size'),
+                DesiredCapacity = cfg.get('scale_policy', 'desired'), 
+                VPCZoneIdentifier = subnet_ids_string, # requires a string
+            )
+        else:
+            # do this if AvailabilityZones are defined
+            response = conn.create_auto_scaling_group(
+                AvailabilityZones = azs,
+                AutoScalingGroupName = self.name(),
+                LoadBalancerNames = cfg.get('elbs'),
+                LaunchConfigurationName = self.lc().name(),
+                MinSize = cfg.get('scale_policy', 'min_size'),
+                MaxSize = cfg.get('scale_policy', 'max_size'),
+                DesiredCapacity = cfg.get('scale_policy', 'desired'),
+                VPCZoneIdentifier = subnet_ids_string,
+            )
 
-        # prepare instance tags
+        # should check if asg was created, here
+        # if not conn.create_auto_scaling_group(ag):
+        #    print "Failed to create autoscale group"
+        #    return False
+
+        debug('Preparing tags that will be applied to the asg')
         tags = cfg.get('tags')
         if not tags:
             tags = {}
@@ -195,22 +331,27 @@ class AutoscaleGroup:
         tags['Name'] = self.name()
 
         # apply tags        
-        tag_set = [self.ag_tag(ag, k,v) for (k,v) in tags.iteritems()]
-        conn.create_or_update_tags(tag_set)
+        tag_set = [self.ag_tag(name, k,v) for (k,v) in tags.iteritems()]
+        debug("Applying tags to asg")
+        conn.create_or_update_tags( Tags=tag_set)
 
         util.message_integrations("Activated ASgroup {}".format(name))
-
-        return ag
+        # NOTE: what should we be returning here?  Not sure.
+        #return ag
+        return name
 
     def ag_tag(self, ag, k, v):
-        return Tag(
-            key=k,
-            value=v,
-            propagate_at_launch=True,
-            resource_id=ag.name
-        )
+        debug("In asgroup.py ag_tag")
+        return { 'ResourceId': ag,
+             'ResourceType': 'auto-scaling-group', # ResourceType must be string 'auto-scaling-group'
+             'Key': str(k), # Key must be a string
+             'Value': str(v), # Value must be a string
+             'PropagateAtLaunch': True,
+        }
 
+    # NOTE: not sure what this is for. not sure what the token stuff is for
     def get_instances(self):
+        debug("In asgroup.py get_instances")
         ret = []
         done = False
         next_token = None
@@ -222,28 +363,33 @@ class AutoscaleGroup:
             next_token = all_instances.next_token
             if not next_token:
                 done = True
-
             instances = [i for i in all_instances if i.group_name == self.name()]
             ret.extend(instances)
-
         return ret
 
     def print_instances(self):
-        instances = self.get_instances()
-        print("Group\t\tID\t\tState\t\tStatus")
-        for instance in instances:
-            status = instance.health_status
-            lcname = instance.launch_config_name
-            state = instance.lifecycle_state
-            group = instance.group_name
-            iid = instance.instance_id
-            print("{}\t{}\t{}\t{}".format(group, iid, state, status))
-
+        debug("In asgroup.py print_instances")
+        name = self.name()
+        asg_info = self.conn.describe_auto_scaling_groups( AutoScalingGroupNames = [name] )['AutoScalingGroups']
+        if not asg_info:
+            pprint("No info for ASG " + name + " . are you sure it exists?")
+            return None
+        else:
+            instances = asg_info[0]['Instances']
+            print("Group\t\tID\t\tState\t\tStatus")
+            for instance in instances:
+                status = instance['HealthStatus']
+                lcname = instance['LaunchConfigurationName']
+                state = instance['LifecycleState']
+                group = name
+                iid = instance['InstanceId']
+                print("{}\t{}\t{}\t{}".format(group, iid, state, status))
 
     def ip_addresses(self):
-        instances = self.get_instances()
-        ids = [i.instance_id for i in instances]
+        debug("In asgroup.py ip_addresses")
+        instances = self.conn.describe_auto_scaling_groups( AutoScalingGroupNames = [self.name()] )['AutoScalingGroups'][0]['Instances']
+        ids = [i['InstanceId'] for i in instances]
         ec2_conn = util.ec2_conn()
-        ec2_instances = ec2_conn.get_only_instances(ids)
-        ips = [i.ip_address for i in ec2_instances]
+        ec2_instances = ec2_conn.describe_instances( InstanceIds = ids )['Reservations']
+        ips = [ instance['Instances'][0]['PublicIpAddress'] for instance in ec2_instances ]
         return ips

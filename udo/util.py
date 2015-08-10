@@ -1,25 +1,36 @@
 # Handy common utilities for udo modules
 
-import config
-import boto
-import boto.ec2
+import boto3
+import getpass
 import json
-import urllib2
-from time import sleep
-import sys
 import os
 import socket
-import getpass
+import sys
+import urllib2
+
+from pprint import pprint
+from time import sleep
+
+import config
 
 # don't use for tests
+
+def debug(msg):
+    # to use:
+    # export DEBUG='True'
+    if os.environ.get('DEBUG') == 'True':
+        pprint(msg)
+    
 def default_config():
     return config.Config()
 
 def region():
-    return default_config().get('region')
+    region = default_config().get('region')
+    return region
 
 # returns dict of arguments common to any boto connection we establish
 def connection_args():
+    debug("in util.py connection_args")
     _region = region()
     if not _region:
         # use the default region, I guess?
@@ -27,31 +38,32 @@ def connection_args():
         return "us-east-1"
 
     args = {
-        'region': boto.ec2.get_region(_region)
+        'region_name': _region
     }
     return args
 
-# autoscale connection
+# AutoScaling connection
 def as_conn():
+    debug("in util.py as_conn")
     args = connection_args()
-    region = args.pop('region')
-    return boto.ec2.autoscale.connect_to_region(region.name, **args)
+    return boto3.client('autoscaling', **args)
 
-# ec2 connection
+# EC2 connection
 def ec2_conn():
+    debug("in util.py ec2_conn")
     args = connection_args()
-    region = args.pop('region')
-    return boto.ec2.connect_to_region(region.name, **args)
+    return boto3.client('ec2', **args)
 
-# codedeploy connection
+# CodeDeploy connection
 def deploy_conn():
+    debug("in util.py deploy_conn")
     args = connection_args()
-    region = args.pop('region')
-    return boto.codedeploy.connect_to_region(region.name, **args)
+    return boto3.client('codedeploy', **args)
 
 # ask a yes/no question
 # returns true/false
 def confirm(msg):
+    debug("in util.py confirm")
     yn = raw_input(msg + " (y/n) ")
     if yn.lower() == 'y':
         return True
@@ -61,35 +73,43 @@ def confirm(msg):
 # keep trying proc until timeout or no exception is thrown
 # use this when you're waiting for a change to take effect
 # FIXME: actually respect timeout
-def retry(proc, timeout):
-    success = False
-    ret = None
-    while success == False:
-        try:
-            ret = proc()     
-            success = True
-        except boto.exception.BotoServerError as e:
-            if default_config().get('debug'):
-                # dump response
-                print "Error: {}, retrying...".format(e)
-            else:
-                print('.'),
-            sys.stdout.flush()
-            sleep(5)
-    print "\n"
-    return ret
+# FIXME: this depends on boto . does not work with boto3 yet
+# There's some polling stuff in boto3 that should help replace this
+# There's probably something in botocore that will replace this
+#
+#def retry(proc, timeout):
+#    debug("in util.py retry")
+#    success = False
+#    ret = None
+#    while success == False:
+#        try:
+#            ret = proc()     
+#            success = True
+#        except boto.exception.BotoServerError as e:
+#            if default_config().get('debug'):
+#                # dump response
+#                print "Error: {}, retrying...".format(e)
+#            else:
+#                print('.'),
+#            sys.stdout.flush()
+#            sleep(5)
+#    print "\n"
+#    return ret
 
 def user_and_host():
+    debug("in util.py user_and_host")
     username = getpass.getuser()
     hostname = socket.gethostname()
     return "{}@{}".format(username, hostname)
 
 # also prints out msg
 def message_integrations(msg):
+    debug("in util.py message_integrations")
     message_slack("[{}]  {}".format(user_and_host(), msg))
     print msg
 
 def message_slack(msg):
+    debug("in util.py message_slack")
     slack_cfg = default_config().new_root('slack')
     if not slack_cfg:
         # not configured

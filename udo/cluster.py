@@ -1,12 +1,17 @@
+import boto3
+import sys
+from pprint import pprint
+
 import config
 import util
 
-from boto.vpc import VPCConnection
+from util import debug
 
 _cfg = config.Config()
 
 # class method
 def list():
+    debug("In cluster.py class method list")
     clusters = _cfg.get('clusters')
     cluster_names = clusters.keys()
     cluster_names.sort()
@@ -19,22 +24,23 @@ def list():
             print "        {}: {}".format(k, v)
 
 def vpc_conn():
-    args = util.connection_args()
-    return VPCConnection(**args)
+    debug("In cluster.py class method vpc_conn")
+    ec2 = boto3.resource('ec2')
+    vpc_iterator = ec2.vpcs.all()
+    return vpc_iterator
 
 def get_vpc_by_name(name):
-    vpcs = vpc_conn().get_all_vpcs()
+    debug("In cluster.py class method get_vpc_by_name")
+    # TODO: error if more than one vpc has the same Name tag
+    vpcs_iterator = vpc_conn() # iterator of all vpcs
+
     ret = None
-    for vpc in vpcs:
+    for vpc in vpcs_iterator:
         tags = vpc.tags
-        if 'Name' not in tags:
-            continue
-        vpc_name = tags.get('Name')
-        if vpc_name == name:
-            # duplicate?
-            if ret:
-                print "Warning: found more than one VPC with the name {}".format(name)
-            ret = vpc
+        for tag in tags:
+             if tag['Key'] == "Name":
+                 if tag['Value'] == name:
+                     ret = vpc
     return ret
 
 class Cluster:
@@ -47,6 +53,7 @@ class Cluster:
         self.conn = vpc_conn()
 
     def status(self):
+        debug("In cluster.py status")
         vpc = get_vpc_by_name(self.name)
         if not vpc:
             return { 'exists': False }
@@ -66,6 +73,7 @@ class Cluster:
     
     # active this cluster
     def activate(self):
+        debug("In cluster.py activate")
         conn = vpc_conn()
 
         cfg = _cfg.get('clusters', self.name)
@@ -79,6 +87,13 @@ class Cluster:
             return
 
         # create VPC
+        #
+        # boto3 docs example for creating a vpc:
+        # ec2 = boto3.resource('ec2')
+        # vpc = ec2.create_vpc(CidrBlock='10.0.0.0/24')
+        # subnet = vpc.create_subnet(CidrBlock='10.0.0.0/25')
+        # gateway = ec2.create_internet_gateway()
+ 
         subnet_cidr = cfg.get('subnet_cidr')
         if not subnet_cidr:
             print "No subnet definition found for {}".format(self.name)
@@ -95,6 +110,3 @@ class Cluster:
         vpc.add_tag('udo', value=True)
 
         return True
-
-
-

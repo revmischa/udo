@@ -1,17 +1,27 @@
-# create_deployment(application_name, deployment_group_name=None, 
-# revision=None, deployment_config_name=None, description=None, 
-# ignore_application_stop_failures=None)
+"""
+create_deployment(application_name, deployment_group_name=None, 
+revision=None, deployment_config_name=None, description=None, 
+ignore_application_stop_failures=None)
+"""
+
+import boto3
+import sys
+
+from datetime import datetime
+from dateutil.parser import parse
+from pprint import pprint
 
 import config
 import util
-import boto
-from datetime import datetime
-from boto.codedeploy.layer1 import CodeDeployConnection
+
+from time import sleep
+from util import debug
 
 _cfg = config.Config()
 
 class Deploy:
-    # role_name is totally optional
+    """ describe class here"""
+    # role_name is optional
     # cluster_name is kinda optional
     def __init__(self, cluster_name=None, role_name=None):
         if cluster_name:
@@ -26,23 +36,29 @@ class Deploy:
         self.conn = util.deploy_conn()
 
     def config(self):
+        debug("in deploy.py config")
         return self.cfg.get('deploy')
 
     def app_name(self):
+        debug("in deploy.py app_name")
         application = self.config().get('application')
         if not application:
             print "Deployment application not specified or configured"
             print "Valid applications are:"
             self.list_applications()
             return
-
         return application
 
     def commit_id_display(self, commit_id):
+        debug("in deploy.py commit_id")
         return commit_id[:10]
 
     # create a deployment
     def create(self, group_name, commit_id):
+    # NOTE:
+    #
+    # we could put something at end that alerts if deployment was successful or not
+        debug("in deploy.py create")
         cfg = self.config()
 
         if not 'application' in cfg:
@@ -65,36 +81,117 @@ class Deploy:
         repo_name = source['repo']
 
         application_name = cfg['application']
-        deploy_rev = {
-            'revisionType': 'GitHub',
-            'gitHubLocation': {
-                'repository': repo_name,
-                'commitId': commit_id,
-            }
-        }
+        #deploy_rev = {
+        #    'revisionType': 'GitHub',
+        #    'gitHubLocation': {
+        #        'repository': repo_name,
+        #        'commitId': commit_id,
+        #    }
+        #}
         msg = "Deploying commit {} to deployment group: {}".format(self.commit_id_display(commit_id), group_name)
-        deployment = self.conn.create_deployment(application_name,
-            deployment_group_name=group_name,
-            revision=deploy_rev,
-            ignore_application_stop_failures=False,
-        )
+
+        #print(msg)
+        #response = self.conn.list_deployment_groups( applicationName=application_name)
+        #pprint(response)
+        #sys.exit(1)
+
+        deployment = self.conn.create_deployment(applicationName=application_name,
+            deploymentGroupName=group_name,
+            revision={ 'revisionType': 'GitHub',
+                       'gitHubLocation': {
+                           'repository': repo_name,
+                           'commitId' : commit_id
+                           }
+                   },
+            # deploymentConfigName = string,
+            ignoreApplicationStopFailures = False,
+            )
         if not deployment:
             # prob won't reach here, will throw error instead
             print "Deployment failed"
             return
         deployment_id = deployment['deploymentId']
+        debug("in deploy.py create: deploymentId: " + deployment_id)
+        
         util.message_integrations(msg)
-        self.list_deployments(deployment_id)
 
+        debug("in deploy.py create: deploymentId: " + deployment_id)
+
+        pprint("Waiting 20 seconds to give AWS a chance to complete deployment")
+        try:
+            sleep(20)
+        except KeyboardInterrupt:
+            pprint("Got impatient")
+
+        interval = 20
+        tries = 20
+        # deployment_status[status] will be:
+        # 'Created'|'Queued'|'InProgress'|'Succeeded'|'Failed'|'Stopped',
+        #
+        # what you see in AWS dashboard appears to be current
+        # info you grab from the API is slightly delayed
+        #
+        for x in range(0, tries):
+            try:
+                if self.deployment_status(deployment_id)['status'] == 'Succeeded':
+                    _msg = 'Deployment of commit ' + commit_id + ' to deployment group: ' + group_name + ' successful.'
+                    util.message_integrations(_msg)
+                    # NOTE: this is where we would run a jenkins batch job
+                    break
+                elif self.deployment_status(deployment_id)['status'] == 'Failed':
+                    _msg = "FAILURE to deploy commit ' + commid_id + ' to deployment group: ' + group_name"
+                    break
+                elif self.deployment_status(deployment_id)['status'] == 'Created':
+                    raise ValueError("deployment has been created... nothing has happened yet")
+                elif self.deployment_status(deployment_id)['status'] == 'Queued':
+                    raise ValueError("deployment is Queued")
+                elif self.deployment_status(deployment_id)['status'] == 'InProgress':
+                    raise ValueError("deployment is InProgress")
+                elif self.deployment_status(deployment_id)['status'] == 'Stopped':
+                    _msg = 'deployment to deployment group' + group_name + ' is stopped'
+                    util.message_integrations(_msg)
+                else:
+                    pprint("An unknown condition has occured")
+                    sys.exit(1)
+            except KeyboardInterrupt:
+                pprint("Got impatient")
+            except ValueError as e:
+                #pprint(e)
+                pass
+
+            try:
+                if e:
+                    pprint("pausing " + str(interval) + " seconds")
+                    sleep(interval)
+                else:
+                    break
+            except KeyboardInterrupt:
+                pprint("Got impatient")
+        #self.list_deployments(deployment_id)
+
+    # NOTE: Should figure out why original author of udo was getting 'deps' info
     def list_deployments(self, dep_id=None, group=None):
-        deps = self.conn.list_deployments(deployment_group_name=group)
-        if dep_id:
-            self.print_deployment(dep_id)
-        else:
-            for dep_id in deps['deployments']:
-                self.print_deployment(dep_id)
+        debug("in deploy.py list_deployments")
+        application_name = self.app_name()
+        groups = self.conn.list_deployment_groups(applicationName=application_name)['deploymentGroups']
+        #print("Known groups: " + str([x.encode('ascii') for x in groups]))
+        _length = len(groups)
+        for group in groups:
+            pprint("group: " + str(group))
+            pprint("application_name: " + application_name)
+            if _length > 1:
+              print("")
+            _length = _length - 1
+            # NOTE: not sure anything was ever done with the data from the following line.
+            # deps = self.conn.list_deployments( applicationName = application_name, deploymentGroupName = group )
+        #if dep_id:
+        #    self.print_deployment(dep_id)
+        #else:
+        #    for dep_id in deps['deployments']:
+        #        self.print_deployment(dep_id)
 
     def print_last_deployment(self, **kwargs):
+        debug("in deploy.py print_last_deployment")
         application_name = self.app_name()
         if 'deployment_group_name' in kwargs and not 'application_name' in kwargs:
             kwargs['application_name'] = application_name
@@ -105,27 +202,28 @@ class Deploy:
         self.print_deployment(deps[0])
 
     def stop_deployment(self):
+        debug("in deploy.py stop_deployment")
         deps = self.conn.list_deployments()['deployments']
         if not len(deps):
             print "No deployments found"
             return
         last_dep_id = deps[0]
-        self.conn.stop_deployment(last_dep_id)
+        self.conn.stop_deployment(deploymentId = last_dep_id)
         print "Stopped {}".format(last_dep_id)
         self.print_last_deployment()
 
     def print_deployment(self, dep_id):
-        dep = self.conn.get_deployment(dep_id)
+        debug("in deploy.py print_deployment")
+        dep = self.conn.get_deployment(deploymentId=dep_id)
         info = dep['deploymentInfo']
         dep_id = info['deploymentId']
         app_name = info['applicationName']
         group_name = info['deploymentGroupName']
         status = info['status']
         rev_info = info['revision']
-        create_time = datetime.fromtimestamp(info['createTime'])
-        create_time_display = create_time.strftime("%A, %d %B %Y %I:%M%p %Z")
+        createTime = info['createTime']
+        create_time_display = createTime.strftime("%A, %d %B %Y %I:%M%p")
         commit_id = 'unknown'
-        #print dep
         msg = ""
         if 'errorInformation' in info:
             error_info = info['errorInformation']
@@ -143,6 +241,7 @@ class Deploy:
         msg, commit_id)
 
     def list_applications(self):
+        debug("in deploy.py list_applications")
         apps = self.conn.list_applications()
         # TODO: fetch more apps via next_token if available
         app_names = apps['applications']
@@ -150,12 +249,13 @@ class Deploy:
             print " - Application: {}".format(name)
 
     def list_groups(self, application=None):
+        debug("in deploy.py list_groups")
         application = self.app_name()
-        groups = self.conn.list_deployment_groups(application)
+        groups = self.conn.list_deployment_groups(applicationName=application)
         # TODO: fetch more groups via next_token if available
         group_names = groups['deploymentGroups']
         for name in group_names:
-            group = self.conn.get_deployment_group(application, name)
+            group = self.conn.get_deployment_group(applicationName=application, deploymentGroupName=name)
             info = group['deploymentGroupInfo']
             style = info['deploymentConfigName']
             print " - Group: {}/{}  \t\t[{}]".format(application, name, style)
@@ -171,9 +271,21 @@ class Deploy:
             print ""
 
     def list_configs(self):
+        debug("in deploy.py list_configs")
         cfgs = self.conn.list_deployment_configs()
         # TODO: fetch more cfgs via next_token if available
         cfg_names = cfgs['deploymentConfigsList']
         for name in cfg_names:
             print " - Configuration: {}".format(name)
 
+    def deployment_status(self, deploymentId):
+        debug("in deploy.py deployment_status")
+        conn = util.deploy_conn()
+        deploymentInfo = conn.get_deployment( deploymentId = deploymentId )['deploymentInfo']
+        deploymentOverview=deploymentInfo['deploymentOverview']
+        # status will Created'|'Queued'|'InProgress'|'Succeeded'|'Failed'|'Stopped',
+        status=deploymentInfo['status']
+        ret = {}
+        ret['status'] = status
+        ret['overview'] = deploymentOverview
+        return(ret)

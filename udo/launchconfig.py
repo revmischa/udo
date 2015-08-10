@@ -1,16 +1,16 @@
-import config
-import util
-import cluster
-
-import re
+import boto3
 import os
+import re
 import sys
 from pprint import pprint
 from string import Template
 
-import boto
-from boto.ec2.autoscale import AutoScaleConnection
-from boto.ec2.autoscale import LaunchConfiguration
+import cluster
+import config
+import util
+
+from time import sleep
+from util import debug
 
 _cfg = config.Config()
 
@@ -75,13 +75,9 @@ fi
 # custom post-init hook
 @cloud_init_post
 
-
 # might not be a bad idea to reboot after updating everything?
 #/sbin/reboot now
 '''
-
-#####
-
 
 class LaunchConfig:
     def __init__(self, cluster_name, role_name):
@@ -93,12 +89,16 @@ class LaunchConfig:
 
     # have a default name, but can be overridden
     def name(self):
+        debug("in launchconfig.py name")
         return self._name
+
     def set_name(self, name):
+        debug("in launchconfig.py set_name")
         self._name = name
 
     # processes the cloud-init template, returns a string
     def cloud_init_script(self):
+        debug("in launchconfig.py cloud_init")
         # load cloud-init script template
         cloud_init_template = LCTemplate(cloud_init_script)
 
@@ -123,6 +123,7 @@ class LaunchConfig:
 
     # does a LC exist with our name?
     def exists(self):
+        debug("in launchconfig.py exists")
         lc = self.get_lc()
         if lc:
             return True
@@ -131,6 +132,7 @@ class LaunchConfig:
     # we can't modify a launchconfig in place, we have to create
     # a new one. returns new udo.lc
     def update(self):
+        debug("in launchconfig.py update")
         if not self.exists():
             # easy, just create it
             print "not exists"
@@ -152,54 +154,69 @@ class LaunchConfig:
         newlc.activate()
         return newlc
 
+    # NOTE: could do more error checking here.  what if for some crazy reason we have similar
+    # named launch configs and we return more than 1 answer?
     def get_lc(self):
+        debug("in launchconfig.py get_lc")
         conn = util.as_conn()
-        lcs = conn.get_all_launch_configurations(names = [self.name()])
-        if not len(lcs):
-            return None
-        return lcs[0]
+        _lcs = conn.describe_launch_configurations()['LaunchConfigurations']
+        lcs={}
+        for lc in _lcs:
+            lcs[lc['LaunchConfigurationName']]=lc
+        for key, value in lcs.iteritems():
+            if key.startswith(self.name()):
+                return value
+        # if we didnt find a LaunchConfig above by the time we get to here, return None
+        return None
 
+    # this could use more error checking to see if the launchconfig delete actually happened
     def deactivate(self):
+        debug("in launchconfig.py deactivate")
         if not self.exists():
             return
         print "Deleting launchconfig..."
-        lc = self.get_lc()
-        if util.retry(lambda: lc.delete(), 500):
-            util.message_integrations("Deleted LaunchConfig {}".format(self.name()))
-        else:
+        client = boto3.client('autoscaling')
+        response = client.delete_launch_configuration( LaunchConfigurationName = self.name() )
+        sleep(5) # give aws a chance to delete the launchconfig
+        try:
+            response = client.describe_launch_configurations( LaunchConfigurationName = self.name() )
             util.message_integrations("Failed to delete LaunchConfig {}".format(self.name()))
+        except:
+            util.message_integrations("Deleted LaunchConfig {}".format(self.name()))
 
     # creates the LaunchConfig
-    # returns True if LC exists
+    # returns True if LaunchConfig exists
     def activate(self):
+        debug("in launchconfig.py activate")
         conn = util.as_conn()
-        conn = boto.ec2.autoscale.connect_to_region('us-west-2')
-
         name = self.name()
 
-        # check if this LC already exists
         if self.exists():
+            pprint("in launchconfig.py self.exists()")
+            # NOTE: I don't think program logic ever gets here
             if not util.confirm("LaunchConfig {} already exists, overwrite?".format(name)):
+                pprint("in launchconfig.py activate: Confirmed overwriting LaunchConfig")
                 return True
             # delete existing
-            conn.delete_launch_configuration(name)
+            pprint("in launchconfig.py activate: deleting LaunchConfig")
+            conn.delete_launch_configuration(LaunchConfigurationName=name)
 
         # get configuration for this LC
         cfg = self.role_config
-        lc = LaunchConfiguration(
-            name = name,
-            image_id = cfg.get('ami'),
-            instance_profile_name = cfg.get('iam_profile'),
-            instance_type = cfg.get('instance_type'),
-            security_groups = cfg.get('security_groups'),
-            key_name = cfg.get('keypair_name'),
-            user_data = self.cloud_init_script(),
-            associate_public_ip_address = True,  # this is required for your shit to actually work
+
+        # NOTE: wrap the following in a try block to catch errors
+        lc = conn.create_launch_configuration(
+            AssociatePublicIpAddress = True, # this is required to make your stuff actually work
+            LaunchConfigurationName = name,
+            IamInstanceProfile = cfg.get('iam_profile'),
+            ImageId = cfg.get('ami'),
+            InstanceType = cfg.get('instance_type'),
+            KeyName = cfg.get('keypair_name'),
+            UserData = self.cloud_init_script(),
+            SecurityGroups = cfg.get('security_groups')
         )
-        if not conn.create_launch_configuration(lc):
-            print "Error creating LaunchConfig {}".format(name)
-            return False
-
+        #if not conn.create_launch_configuration(lc):
+        #    print "Error creating LaunchConfig {}".format(name)
+        #    return False
         util.message_integrations("Activated LaunchConfig {}".format(name))
-
         return lc
