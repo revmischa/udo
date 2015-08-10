@@ -2,12 +2,10 @@
 
 #### change dir to root of your repo ( same dir you have been running udo from, so udo can find udo.yml )
 
-#### uninstall systemwide udo, if its installed
-* use sudo to run this as root
+#### uninstall systemwide udo, if its installed ( as root )
     sudo pip uninstall udo
 
-#### make a new virtualenv
-* this should not be run as root
+#### make a new virtualenv ( not as root )
     virtualenv venv
 
 #### activate the virtualenv
