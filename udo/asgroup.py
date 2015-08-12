@@ -274,9 +274,13 @@ class AutoscaleGroup:
 
         subnet_ids = self.get_subnet_ids_by_cidrs(subnet_cidrs)
         azs=cfg.get('availability_zones')
+        cfg_args = {}
+
+        # If AvailabilityZones is defined, add it to the args we will pass to conn.create_auto_scaling_group()
         if not azs:
             pprint("No availability_zones set")
         else:
+            cfg_args['AvailabilityZones'] = azs
             print "AZs: {}".format(availability_zones)
     
        # VPCZoneIdentifier ( which can be plural ) takes a string
@@ -289,29 +293,14 @@ class AutoscaleGroup:
             _length = _length - 1
         pprint("Using subnet ids: " + str(subnet_ids_string))
 
-        if not azs:
-            response = conn.create_auto_scaling_group(
-                AutoScalingGroupName = self.name(),
-                LoadBalancerNames = cfg.get('elbs'),
-                LaunchConfigurationName = self.lc().name(),
-                MinSize = cfg.get('scale_policy', 'min_size'),
-                MaxSize = cfg.get('scale_policy', 'max_size'),
-                DesiredCapacity = cfg.get('scale_policy', 'desired'), 
-                VPCZoneIdentifier = subnet_ids_string, # requires a string
-            )
-        else:
-            # do this if AvailabilityZones are defined
-            response = conn.create_auto_scaling_group(
-                AvailabilityZones = azs,
-                AutoScalingGroupName = self.name(),
-                LoadBalancerNames = cfg.get('elbs'),
-                LaunchConfigurationName = self.lc().name(),
-                MinSize = cfg.get('scale_policy', 'min_size'),
-                MaxSize = cfg.get('scale_policy', 'max_size'),
-                DesiredCapacity = cfg.get('scale_policy', 'desired'),
-                VPCZoneIdentifier = subnet_ids_string,
-            )
+        cfg_args['AutoScalingGroupName'] = self.name()
+        cfg_args['LoadBalancerNames'] = cfg.get('elbs')
+        cfg_args['LaunchConfigurationName'] = self.lc().name()
+        cfg_args['MinSize'] = cfg.get('scale_policy', 'min_size')
+        cfg_args['MaxSize'] = cfg.get('scale_policy', 'max_size')
+        cfg_args['VPCZoneIdentifier'] = subnet_ids_string
 
+        response = conn.create_auto_scaling_group(**cfg_args)
         # NOTE: should check if asg was created
 
         debug('Preparing tags that will be applied to the asg')
