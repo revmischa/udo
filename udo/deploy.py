@@ -133,30 +133,33 @@ class Deploy:
         #
         for x in range(0, tries):
             try:
-                if self.deployment_status(deployment_id)['status'] == 'Succeeded':
+            # should get status here, then check for it, instead of in the loop
+                status = self.deployment_status(deployment_id)['status']
+                if status == 'Succeeded':
                     _msg = 'Deployment of commit ' + commit_id + ' to deployment group: ' + group_name + ' successful.'
                     util.message_integrations(_msg)
                     # NOTE: this is where we would run a jenkins batch job
                     break
-                elif self.deployment_status(deployment_id)['status'] == 'Failed':
+                elif status == 'Failed':
                     _msg = "FAILURE to deploy commit ' + commid_id + ' to deployment group: ' + group_name"
                     break
-                elif self.deployment_status(deployment_id)['status'] == 'Created':
+                elif status == 'Created':
                     raise ValueError("deployment has been created... nothing has happened yet")
-                elif self.deployment_status(deployment_id)['status'] == 'Queued':
+                elif status == 'Queued':
                     raise ValueError("deployment is Queued")
-                elif self.deployment_status(deployment_id)['status'] == 'InProgress':
+                elif status == 'InProgress':
                     raise ValueError("deployment is InProgress")
-                elif self.deployment_status(deployment_id)['status'] == 'Stopped':
+                elif status == 'Stopped':
                     _msg = 'deployment to deployment group' + group_name + ' is stopped'
                     util.message_integrations(_msg)
                 else:
                     pprint("An unknown condition has occured")
+                    pprint("status: " + str(status))
                     sys.exit(1)
             except KeyboardInterrupt:
                 pprint("Got impatient")
             except ValueError as e:
-                #pprint(e)
+                pprint(e)
                 pass
 
             try:
