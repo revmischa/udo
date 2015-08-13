@@ -14,6 +14,9 @@
 #### install latest pip
     pip install pip --upgrade
 
+#### remove previous version of udo in the virtualenv ( this might not be needed )
+    pip uninstall udo
+
 #### install udo from master branch of my fork
     pip install https://github.com/danhdb/udo/archive/master.zip
 

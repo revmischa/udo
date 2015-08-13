@@ -277,12 +277,12 @@ class AutoscaleGroup:
         cfg_args = {}
 
         # If AvailabilityZones is defined, add it to the args we will pass to conn.create_auto_scaling_group()
-        if not azs:
-            pprint("No availability_zones set")
-        else:
+        if azs:
             cfg_args['AvailabilityZones'] = azs
             print "AZs: {}".format(availability_zones)
-    
+        else:
+            pprint("No availability_zones set")
+
        # VPCZoneIdentifier ( which can be plural ) takes a string
         subnet_ids_string=''
         _length = len(subnet_ids)
