@@ -146,7 +146,7 @@ class Deploy:
                         pprint("No post deploy hooks defined")
                     else:
                         for post_deploy_hook in post_deploy_hooks:
-                            print("will run: " + post_deploy_hook)
+                            print("running: " + post_deploy_hook)
                             try:
                                 command = subprocess.Popen(post_deploy_hook.split())
                             except OSError as e:
