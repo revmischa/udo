@@ -58,3 +58,7 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 
+# util
+udo.yml
+venv/
+*.swp

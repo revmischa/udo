@@ -1,21 +1,20 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
+import argparse 
+import os
+import random
 import sys
 import warnings
-import os
-import argparse
-import random
+
 from pprint import pprint
 
-import cluster
-import launchconfig
-import util
 import asgroup
+import cluster
 import config
 import deploy
-
-#####
-
+import launchconfig
+import util
 
 # top-level commands go here
 class Udo:
@@ -44,7 +43,6 @@ class Udo:
             else:
                 print "Unknown cluster command: {}".format(action)
 
-
     # launchconfig
     def lc(self, *args):
         args = list(args)
@@ -56,7 +54,8 @@ class Udo:
             return
         action = args.pop(0)
 
-        cluster,role = self.get_cluster_and_role_from_args(*args)
+        cluster,role,extra = self.get_cluster_and_role_from_args(*args)
+
         if not cluster or not role:
             return
 
@@ -70,7 +69,7 @@ class Udo:
         elif action == 'destroy':
             lc.deactivate()
         else:
-            print "Unrecognized launchconfig action"
+            print "Unrecognized LaunchConfig action"
 
     # autoscale
     def asg(self, *args):
@@ -90,7 +89,7 @@ class Udo:
 
         # TODO: hook up 'list'
 
-        cluster,role,extra = self.get_cluster_and_role_from_args(*args)
+        cluster, role, extra = self.get_cluster_and_role_from_args(*args)
         if not cluster or not role:
             return
 
@@ -113,12 +112,13 @@ class Udo:
             # get scale arg
             if extra:
                 scale = int(extra)
+                print("in main.py: ag.scale(scale)")
                 ag.scale(scale)
             else:
+                print("in main.py: ag.get_scale_size()")
                 ag.get_scale_size()
         else:
             print "Unrecognized asgroup action {}".format(action)
-
 
     # CodeDeploy
     def deploy(self, *args):
@@ -131,13 +131,14 @@ class Udo:
             print " list configs"
             print " create (group) (commit_id)"
             print " last [group]"
+            print " status deploymentId" # only for debugging
             return
         action = args.pop(0)
 
         if action == 'list':
             dep = deploy.Deploy()
             if not len(args):
-                print "list what? applications, groups, deployments or configs?"
+                print "list what? applications, groups, deployments, post or configs?"
                 return
             what = args.pop(0)
             if what == 'applications' or what == 'apps':
@@ -152,6 +153,8 @@ class Udo:
                 dep.list_configs()
             elif what == 'deployments':
                 dep.list_deployments()
+            elif what == 'post':
+                dep.list_post_deploy_hooks()
             else:
                 print "Unknown list type: {}".format(what)
         elif action == 'create':
@@ -159,7 +162,6 @@ class Udo:
             if len(args) != 2:
                 print "deploy create requires group and commit id"
                 return
-
             group = args.pop(0)
             commit_id = args.pop(0)
             dep = deploy.Deploy()
@@ -172,11 +174,15 @@ class Udo:
                 dep.print_last_deployment(deployment_group_name=group)
             else:
                 dep.print_last_deployment()
+        elif action == 'status':
+            deploymentId = args.pop(0)
+            dep = deploy.Deploy()
+            print(dep.deployment_status(deploymentId))
         elif action == 'stop':
             dep = deploy.Deploy()
             dep.stop_deployment()
         elif len(args) == 1:
-            # let's just assume we wanna create a deployment
+            # assume we want to create a deployment
             group = action
             commit_id = args.pop(0)
             dep = deploy.Deploy()
@@ -184,6 +190,9 @@ class Udo:
         else:
             print "Unknown deploy command: {}".format(action)
 
+    def version(self, *args):
+        args = list(args)
+        print('1.1.7')
 
     # for testing features
     def test(self, *args):
@@ -227,23 +236,21 @@ class Udo:
                 for r in rolenames:
                     print "  - {}".format(r)
                 return None,None,None
-
+ 
         # still stuff?
         extra = None
         if len(args):
             extra = args.pop(0)
 
         return cluster, role, extra
-#####
-
 
 def invoke_console():
     # argument parsing
     parser = argparse.ArgumentParser(description='Manage AWS clusters.')
     parser.add_argument('cmd', metavar='command', type=str, nargs='?',
-                       help='Action to perform. Valid actions: status.')
+        help='Action to perform. Valid actions: status.')
     parser.add_argument('cmd_args', metavar='args', type=str, nargs='*',
-                       help='Additional arguments for command.')
+        help='Additional arguments for command.')
     args = parser.parse_args()
     
     if args.cmd not in dir(Udo):
@@ -271,9 +278,11 @@ Valid commands are:
   * deploy list groups - view CodeDeploy application deployment groups
   * deploy list deployments - view CodeDeploy deployment statuses
   * deploy list configs - view CodeDeploy configurations
+  * deploy list post - view post deploy hooks
   * deploy create (group) (commit) - create new deployment for commit on group
   * deploy last - shows status of most recent deployment
   * deploy stop - cancel last deployment
+  * version - print udo version
         """
         sys.exit(1)
 
@@ -281,8 +290,6 @@ Valid commands are:
     exe = Udo()
     method = getattr(exe, args.cmd)
     method(*args.cmd_args)
-
-
 
 if __name__ == '__main__':
     invoke_console()

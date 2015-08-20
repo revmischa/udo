@@ -1,7 +1,6 @@
-import yaml
-from pprint import pprint
 import os
 import sys
+import yaml
 
 """
 This class provides an interface into the entire AWS configuration.
@@ -12,7 +11,7 @@ In addition, hashes and arrays are combined as it merges down.
 
 If this is unclear, take a look at test_config.py and config.sample.yml. 
 
-how2use:
+usage:
     cfg = Config()
 
     # get a root configuration value
@@ -175,10 +174,6 @@ class Config:
 
         return roles_config.new_root(role_name)
 
-
-
-##
-
 # for convenience        
 def get_cluster_config(cluster_name):
     cluster_config = Config()
@@ -187,4 +182,3 @@ def get_cluster_config(cluster_name):
 def get_role_config(cluster_name, role_name):
     cluster_config = Config()
     return cluster_config.get_role_config(cluster_name, role_name)
-
