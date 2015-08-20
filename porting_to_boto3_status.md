@@ -20,3 +20,15 @@ make sure vpc creating in cluster.py works. im not confident the vpc creating st
 Nice to have:
 
 We should remove 'cluster'.  it has not proven to be very useful.  
+
+we should use the token/next token stuff, in case we are managing large amounts of resources
+
+sometimes we use applicationName , application_name , application .  should standardize
+same deal with groupName, group_name, deployment_group_name
+
+should hide output of the post_build_steps , only output it if DEBUG is set
+add labels for the post_build steps , that can be outputted later
+
+make sure the wget doesn't leave files around 
+
+should have udo deploy, then block until a deployment status is failed or not failed

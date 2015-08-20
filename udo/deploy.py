@@ -5,6 +5,8 @@ ignore_application_stop_failures=None)
 """
 
 import boto3
+import subprocess
+import re
 import sys
 
 from datetime import datetime
@@ -139,6 +141,22 @@ class Deploy:
                     _msg = 'Deployment of commit ' + commit_id + ' to deployment group: ' + group_name + ' successful.'
                     util.message_integrations(_msg)
                     # NOTE: this is where we would run a jenkins batch job
+                    post_deploy_hooks = self.get_post_deploy_hooks(application_name, group_name)
+                    if not post_deploy_hooks:
+                        pprint("No post deploy hooks defined")
+                    else:
+                        for post_deploy_hook in post_deploy_hooks:
+                            print("will run: " + post_deploy_hook)
+                            try:
+                                command = subprocess.Popen(post_deploy_hook.split())
+                            except OSError as e:
+                                print e
+                                pass
+                            except ValueError as e:
+                                print e    
+                                pass
+                            except:
+                                pass
                     break
                 elif status == 'Failed':
                     _msg = "FAILURE to deploy commit ' + commid_id + ' to deployment group: ' + group_name"
@@ -170,14 +188,12 @@ class Deploy:
                     break
             except KeyboardInterrupt:
                 pprint("Got impatient")
-        #self.list_deployments(deployment_id)
 
     # NOTE: Should figure out why original author of udo was getting 'deps' info
     def list_deployments(self, dep_id=None, group=None):
         debug("in deploy.py list_deployments")
         application_name = self.app_name()
         groups = self.conn.list_deployment_groups(applicationName=application_name)['deploymentGroups']
-        #print("Known groups: " + str([x.encode('ascii') for x in groups]))
         _length = len(groups)
         for group in groups:
             pprint("group: " + str(group))
@@ -185,13 +201,6 @@ class Deploy:
             if _length > 1:
               print("")
             _length = _length - 1
-            # NOTE: not sure anything was ever done with the data from the following line.
-            # deps = self.conn.list_deployments( applicationName = application_name, deploymentGroupName = group )
-        #if dep_id:
-        #    self.print_deployment(dep_id)
-        #else:
-        #    for dep_id in deps['deployments']:
-        #        self.print_deployment(dep_id)
 
     def print_last_deployment(self, **kwargs):
         debug("in deploy.py print_last_deployment")
@@ -292,3 +301,32 @@ class Deploy:
         ret['status'] = status
         ret['overview'] = deploymentOverview
         return(ret)
+
+    # A CodeDeploy deployment group will have 1 or more Auto Scaling Groups defined, which you can get from the AWS api.
+    #
+    # The udo user will define a post_deploy_hook under cluster:role:post_deploy_hook
+    def get_post_deploy_hooks(self, application, deploymentGroup):
+        asgs_info = self.conn.get_deployment_group(applicationName=application, deploymentGroupName=deploymentGroup)['deploymentGroupInfo']['autoScalingGroups']
+        for asg_info in asgs_info:
+            asg_name = asg_info['name']
+            p = re.compile('[a-z]+')
+            cluster = p.match(asg_name).group(0)
+            role = asg_name[len(cluster) + 1:]
+
+            role_info = _cfg.get('clusters', cluster)['roles'][role]
+            if 'post_deploy_hook' in role_info.keys():
+                return(role_info['post_deploy_hook'])
+        return None
+
+    def list_post_deploy_hooks(self, application=None):
+        debug("in deploy.py list_deploy_hooks")
+        application = self.app_name()
+        deploymentGroups = self.conn.list_deployment_groups(applicationName=application)['deploymentGroups']
+        deploymentGroup_asg_info = {}
+        for deploymentGroup in deploymentGroups:
+            print('deploymentGroup: ' + deploymentGroup)
+            post_deploy_hooks = self.get_post_deploy_hooks(application, deploymentGroup)
+            if post_deploy_hooks:
+                print(str(post_deploy_hooks))
+            else:
+                print("No post deploy hooks defined.")

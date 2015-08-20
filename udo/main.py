@@ -138,7 +138,7 @@ class Udo:
         if action == 'list':
             dep = deploy.Deploy()
             if not len(args):
-                print "list what? applications, groups, deployments or configs?"
+                print "list what? applications, groups, deployments, post or configs?"
                 return
             what = args.pop(0)
             if what == 'applications' or what == 'apps':
@@ -153,6 +153,8 @@ class Udo:
                 dep.list_configs()
             elif what == 'deployments':
                 dep.list_deployments()
+            elif what == 'post':
+                dep.list_post_deploy_hooks()
             else:
                 print "Unknown list type: {}".format(what)
         elif action == 'create':
@@ -190,7 +192,7 @@ class Udo:
 
     def version(self, *args):
         args = list(args)
-        print('1.1.5')
+        print('1.1.6')
 
     # for testing features
     def test(self, *args):
@@ -276,6 +278,7 @@ Valid commands are:
   * deploy list groups - view CodeDeploy application deployment groups
   * deploy list deployments - view CodeDeploy deployment statuses
   * deploy list configs - view CodeDeploy configurations
+  * deploy list post - view post deploy hooks
   * deploy create (group) (commit) - create new deployment for commit on group
   * deploy last - shows status of most recent deployment
   * deploy stop - cancel last deployment
