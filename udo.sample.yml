@@ -107,6 +107,7 @@ clusters:
                     - 'myapp-static'
                 tags:
                     'myapp-web-workers': 10
+                # TODO deployment_group: 'dev-webapp'
             worker:
                 instance_type: 'm1.medium'
                 packages:

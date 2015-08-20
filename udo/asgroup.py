@@ -315,7 +315,7 @@ class AutoscaleGroup:
         # apply tags        
         tag_set = [self.ag_tag(name, k,v) for (k,v) in tags.iteritems()]
         debug("Applying tags to asg")
-        conn.create_or_update_tags( Tags=tag_set)
+        conn.create_or_update_tags(Tags=tag_set)
 
         util.message_integrations("Activated ASgroup {}".format(name))
         # NOTE: what should we be returning here?  Not sure.
