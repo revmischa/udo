@@ -32,3 +32,5 @@ add labels for the post_build steps , that can be outputted later
 make sure the wget doesn't leave files around 
 
 should have udo deploy, then block until a deployment status is failed or not failed
+
+README.md could be better
