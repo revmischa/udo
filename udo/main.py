@@ -192,7 +192,7 @@ class Udo:
 
     def version(self, *args):
         args = list(args)
-        print('1.1.7')
+        print('1.1.8')
 
     # for testing features
     def test(self, *args):
