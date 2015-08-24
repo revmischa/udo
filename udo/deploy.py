@@ -92,10 +92,6 @@ class Deploy:
         #}
         msg = "Deploying commit {} to deployment group: {}".format(self.commit_id_display(commit_id), group_name)
 
-        #print(msg)
-        #response = self.conn.list_deployment_groups( applicationName=application_name)
-        #pprint(response)
-        #sys.exit(1)
 
         deployment = self.conn.create_deployment(applicationName=application_name,
             deploymentGroupName=group_name,
@@ -205,13 +201,21 @@ class Deploy:
     def print_last_deployment(self, **kwargs):
         debug("in deploy.py print_last_deployment")
         application_name = self.app_name()
-        if 'deployment_group_name' in kwargs and not 'application_name' in kwargs:
-            kwargs['application_name'] = application_name
-        deps = self.conn.list_deployments(**kwargs)['deployments']
-        if not len(deps):
-            print "No deployments found"
-            return
-        self.print_deployment(deps[0])
+
+        if not kwargs:
+            print("No deployment group specified.  Listing info for all of them.")
+            deployment_groups = self.conn.list_deployment_groups(applicationName=application_name)['deploymentGroups']
+        else:
+            deployment_groups=[]
+            deployment_groups.append(kwargs['deployment_group_name'])
+
+        for deployment_group in deployment_groups:
+            deps = self.conn.list_deployments( applicationName=application_name, deploymentGroupName=deployment_group)['deployments']
+            last_deployment = deps[0]
+            if not len(deps):
+                print "No deployments found"
+                return
+            self.print_deployment(last_deployment)
 
     def stop_deployment(self):
         debug("in deploy.py stop_deployment")
@@ -260,6 +264,24 @@ class Deploy:
         for name in app_names:
             print " - Application: {}".format(name)
 
+    def list_deployment_group_info(self, application, group_name):
+        group = self.conn.get_deployment_group(applicationName=application, deploymentGroupName=group_name)
+        pprint(group)
+        #sys.exit(1)
+        info = group['deploymentGroupInfo']
+        style = info['deploymentConfigName']
+        print " - Group: {}/{}  \t\t[{}]".format(application, group_name, style)
+        # print target revision info
+        if 'targetRevision' in info:
+            target_rev = info['targetRevision']
+            rev_type = target_rev['revisionType']
+            if rev_type and rev_type == 'GitHub':
+                github_loc = target_rev['gitHubLocation']
+                print "      Repository: {}".format(github_loc['repository'])
+                if 'commitId' in github_loc:
+                    print "      Last commit ID: {}".format(github_loc['commitId'])
+        print ""
+
     def list_groups(self, application=None):
         debug("in deploy.py list_groups")
         application = self.app_name()
@@ -267,20 +289,7 @@ class Deploy:
         # TODO: fetch more groups via next_token if available
         group_names = groups['deploymentGroups']
         for name in group_names:
-            group = self.conn.get_deployment_group(applicationName=application, deploymentGroupName=name)
-            info = group['deploymentGroupInfo']
-            style = info['deploymentConfigName']
-            print " - Group: {}/{}  \t\t[{}]".format(application, name, style)
-            # print target revision info
-            if 'targetRevision' in info:
-                target_rev = info['targetRevision']
-                rev_type = target_rev['revisionType']
-                if rev_type and rev_type == 'GitHub':
-                    github_loc = target_rev['gitHubLocation']
-                    print "      Repository: {}".format(github_loc['repository'])
-                    if 'commitId' in github_loc:
-                        print "      Last commit ID: {}".format(github_loc['commitId'])
-            print ""
+            self.list_deployment_group_info(application, name)
 
     def list_configs(self):
         debug("in deploy.py list_configs")
