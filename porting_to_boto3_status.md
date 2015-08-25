@@ -38,3 +38,6 @@ README.md could be better
 You need to manually create a load balancer before you can use a cluster.
 we should write that in a README.
 we could provide a way to do it in udo
+
+- There might be a race condition between creating the asg and the lc
+- should just check if the lc is created before creating the asg

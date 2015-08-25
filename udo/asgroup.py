@@ -294,7 +294,7 @@ class AutoscaleGroup:
         pprint("Using subnet ids: " + str(subnet_ids_string))
 
         cfg_args['AutoScalingGroupName'] = self.name()
-        cfg_args['DesiredCapacity'] = cfg.get('scale_policy', 'desired'), 
+        cfg_args['DesiredCapacity'] = cfg.get('scale_policy')['desired']
         cfg_args['LoadBalancerNames'] = cfg.get('elbs')
         cfg_args['LaunchConfigurationName'] = self.lc().name()
         cfg_args['MaxSize'] = cfg.get('scale_policy', 'max_size')
