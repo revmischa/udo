@@ -34,3 +34,7 @@ make sure the wget doesn't leave files around
 should have udo deploy, then block until a deployment status is failed or not failed
 
 README.md could be better
+
+You need to manually create a load balancer before you can use a cluster.
+we should write that in a README.
+we could provide a way to do it in udo
