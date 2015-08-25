@@ -111,7 +111,7 @@ class Deploy:
         deployment_id = deployment['deploymentId']
         debug("in deploy.py create: deploymentId: " + deployment_id)
         
-        util.message_integrations(msg)
+        util.message_integrations(':ship:' + msg)
 
         debug("in deploy.py create: deploymentId: " + deployment_id)
 
