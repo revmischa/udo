@@ -279,7 +279,7 @@ class AutoscaleGroup:
         # If AvailabilityZones is defined, add it to the args we will pass to conn.create_auto_scaling_group()
         if azs:
             cfg_args['AvailabilityZones'] = azs
-            print "AZs: {}".format(availability_zones)
+            print "AZs: {}".format(azs)
         else:
             pprint("No availability_zones set")
 
@@ -294,12 +294,15 @@ class AutoscaleGroup:
         pprint("Using subnet ids: " + str(subnet_ids_string))
 
         cfg_args['AutoScalingGroupName'] = self.name()
-        cfg_args['DesiredCapacity'] = cfg.get('scale_policy', 'desired'), 
+        cfg_args['DesiredCapacity'] = cfg.get('scale_policy')['desired']
         cfg_args['LoadBalancerNames'] = cfg.get('elbs')
         cfg_args['LaunchConfigurationName'] = self.lc().name()
         cfg_args['MaxSize'] = cfg.get('scale_policy', 'max_size')
         cfg_args['MinSize'] = cfg.get('scale_policy', 'min_size')
         cfg_args['VPCZoneIdentifier'] = subnet_ids_string
+
+        if not cfg_args['LoadBalancerNames']:
+            cfg_args['LoadBalancerNames'] = []
 
         response = conn.create_auto_scaling_group(**cfg_args)
         # NOTE: should check if asg was created
