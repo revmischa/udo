@@ -279,7 +279,7 @@ class AutoscaleGroup:
         # If AvailabilityZones is defined, add it to the args we will pass to conn.create_auto_scaling_group()
         if azs:
             cfg_args['AvailabilityZones'] = azs
-            print "AZs: {}".format(availability_zones)
+            print "AZs: {}".format(azs)
         else:
             pprint("No availability_zones set")
 
