@@ -129,3 +129,17 @@ def message_slack(msg):
     headers = {'Content-Type': 'application/json'}
     request = urllib2.Request(slack_url, data, headers=headers)
     return urllib2.urlopen(request).read()
+
+def search_launch_configs(launchconfig=''):
+    client = as_conn()
+    response = client.describe_launch_configurations()
+    launch_configs={}
+    _launch_configs = response['LaunchConfigurations']
+    for _launch_config in _launch_configs:
+        launch_configs[_launch_config['LaunchConfigurationName']] = _launch_config
+    if not launchconfig:
+    # if we do not specify a launchconfig, return dict of all of them
+        return(launch_configs)
+    else:
+    # if we specify a launchconfig, return a dict of the launchconfig's attributes
+        return(launch_configs[launchconfig])

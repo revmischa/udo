@@ -90,6 +90,7 @@ class Udo:
         # TODO: hook up 'list'
 
         cluster, role, extra = self.get_cluster_and_role_from_args(*args)
+
         if not cluster or not role:
             return
 
@@ -194,6 +195,20 @@ class Udo:
         args = list(args)
         print('3.0.2')
 
+    # util
+    def util(self, *args):
+        args = list(args)
+        if not len(args) or not args[0]:
+            print "util command requires an action. Valid actions are: "
+            print " lcs"
+            return
+        action = args.pop(0)
+
+        if action == 'lcs':
+            pprint(util.search_launch_configs().keys())
+        else:
+            print "Unknown util command: {}".format(action)
+        
     # for testing features
     def test(self, *args):
         args = list(args)
