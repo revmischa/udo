@@ -181,7 +181,7 @@ class LaunchConfig:
         if not self.exists():
             return
         print "Deleting launchconfig..."
-        client = boto3.client('autoscaling')
+        client = util.as_conn()
         response = client.delete_launch_configuration( LaunchConfigurationName = self.name() )
         sleep(5) # give aws a chance to delete the launchconfig
         try:

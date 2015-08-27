@@ -150,7 +150,7 @@ class AutoscaleGroup:
         response = util.as_conn().set_desired_capacity( AutoScalingGroupName = self.name(), DesiredCapacity = desired )
 
         # Check if DesiredCapacity was changed
-        pprint("in asgroup.py scale: running 'asgroup = self.get_asgroup()'")
+        debug("in asgroup.py scale: running 'asgroup = self.get_asgroup()'")
         asgroup = self.get_asgroup()
         new = asgroup['DesiredCapacity']
         if (new != current):
