@@ -204,6 +204,7 @@ class AutoscaleGroup:
                     sleep(30)
                 except KeyboardInterrupt:
                     pprint("Got impatient.")
+                    sys.exit(1)
                 interval = 10
                 tries = 20
                 for x in range(0,tries):
@@ -217,6 +218,7 @@ class AutoscaleGroup:
                             break
                     except KeyboardInterrupt:
                         pprint("Got impatient")
+                        sys.exit(1)
                     except ValueError as e:
                         pprint(e)
                         pass

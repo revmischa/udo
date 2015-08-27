@@ -109,6 +109,9 @@ clusters:
                     'myapp-web-workers': 10
                 # TODO deployment_group: 'dev-webapp'
             worker:
+                # you can stick cloud_init_extra on clusters/roles to run a custom script
+                cloud_init_extra: |
+                    curl --silent --location https://rpm.nodesource.com/setup | bash -  # NPM yum
                 instance_type: 'm1.medium'
                 packages:
                     - 'myapp-schwartz-worker'

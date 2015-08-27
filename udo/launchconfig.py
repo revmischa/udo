@@ -118,7 +118,8 @@ class LaunchConfig:
         # append extra commands from config
         cloud_init_config['cloud_init_pre'] = _cfg.get('cloud_init') or _cfg.get('cloud_init_pre') or ''
         cloud_init_config['cloud_init_post'] = _cfg.get('cloud_init_post') or ''
-        cloud_init_config['cloud_init_extra'] = _cfg.get('cloud_init_extra') or ''
+        # cluster/role configurable extra cloud-init stuff
+        cloud_init_config['cloud_init_extra'] = self.role_config.get('cloud_init_extra') or ''
 
         cloud_init_config['cluster_name'] = self.cluster_name or ''
         cloud_init_config['role_name'] = self.role_name or ''
