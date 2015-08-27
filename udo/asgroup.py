@@ -60,11 +60,11 @@ class AutoscaleGroup:
                 # this might be a race condition between 
                 # exists() and get_asgroup()
                 return None
-            blc = asgroup['LaunchConfigurationName']
-            #if blc:
-            #    lc.set_name(blc)
-            if 'LaunchConfigurationName' in blc:
-                lc.set_name(blc)
+
+            if 'LaunchConfigurationName' in asgroup:
+                blc = asgroup['LaunchConfigurationName']
+                if blc and 'LaunchConfigurationName' in blc:
+                    lc.set_name(blc)
         return lc
 
     # returns true if the LC exists
