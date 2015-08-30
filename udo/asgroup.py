@@ -20,6 +20,11 @@ class AutoscaleGroup:
         self.role_config = config.get_role_config(cluster_name, role_name)
         self.conn = util.as_conn()
 
+    def has_valid_role(self):
+        if not self.role_config:
+            return False
+        return True
+
     def name(self):
         debug("In asgroup.py name")
         return "-".join([self.cluster_name, self.role_name])
@@ -63,7 +68,7 @@ class AutoscaleGroup:
 
             if 'LaunchConfigurationName' in asgroup:
                 blc = asgroup['LaunchConfigurationName']
-                if blc and 'LaunchConfigurationName' in blc:
+            if blc and 'LaunchConfigurationName' in blc:
                     lc.set_name(blc)
         return lc
 
@@ -159,6 +164,12 @@ class AutoscaleGroup:
 
     # kill off asg and recreate it
     def reload(self):
+        # skip deactivation if it doesn't exist
+        asgroup = self.get_asgroup()
+        if not asgroup or not asgroup.exists():
+            self.activate()
+            return
+
         debug("In asgroup.py reload")
         if not util.confirm("Are you sure you want to tear down the {} ASgroup and recreate it?".format(self.name())):
             return
