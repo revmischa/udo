@@ -166,7 +166,7 @@ class AutoscaleGroup:
     def reload(self):
         # skip deactivation if it doesn't exist
         asgroup = self.get_asgroup()
-        if not asgroup or not asgroup.exists():
+        if not asgroup or not self.exists():
             self.activate()
             return
 
