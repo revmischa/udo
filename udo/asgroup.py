@@ -66,6 +66,7 @@ class AutoscaleGroup:
                 # exists() and get_asgroup()
                 return None
 
+            blc = None
             if 'LaunchConfigurationName' in asgroup:
                 blc = asgroup['LaunchConfigurationName']
             if blc and 'LaunchConfigurationName' in blc:
