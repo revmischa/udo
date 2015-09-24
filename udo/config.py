@@ -170,7 +170,7 @@ class Config:
             return
         if role_name not in roles_config.get():
             print "Invalid role name: {}".format(role_name)
-            return;
+            return
 
         return roles_config.new_root(role_name)
 

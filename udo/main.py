@@ -96,6 +96,10 @@ class Udo:
 
         ag = asgroup.AutoscaleGroup(cluster, role)
 
+        if not ag.has_valid_role():
+            print "Invalid role {} specified for cluster {}".format(role, cluster)
+            return
+
         if action == 'create':
             ag.activate()
         elif action == 'destroy':
@@ -231,12 +235,17 @@ class Udo:
             return None,None,None
         cluster = args.pop(0)
 
+        cluster_config = config.get_cluster_config(cluster)
+        if not cluster_config:
+            print "Unknown cluster {}".format(cluster)
+            return None,None,None
+
         # use role name if specified, otherwise assume they meant the obvious thing
         # if there's only one role
         if len(args):
             role = args.pop(0)
         else:
-            roles = config.get_cluster_config(cluster).get('roles')
+            roles = cluster_config.get('roles')
             if not roles:
                 print "Cluster config for {} not found".format(cluster)
                 return None,None,None

@@ -20,6 +20,11 @@ class AutoscaleGroup:
         self.role_config = config.get_role_config(cluster_name, role_name)
         self.conn = util.as_conn()
 
+    def has_valid_role(self):
+        if not self.role_config:
+            return False
+        return True
+
     def name(self):
         debug("In asgroup.py name")
         return "-".join([self.cluster_name, self.role_name])
@@ -60,11 +65,12 @@ class AutoscaleGroup:
                 # this might be a race condition between 
                 # exists() and get_asgroup()
                 return None
-            blc = asgroup['LaunchConfigurationName']
-            #if blc:
-            #    lc.set_name(blc)
-            if 'LaunchConfigurationName' in blc:
-                lc.set_name(blc)
+
+            blc = None
+            if 'LaunchConfigurationName' in asgroup:
+                blc = asgroup['LaunchConfigurationName']
+            if blc and 'LaunchConfigurationName' in blc:
+                    lc.set_name(blc)
         return lc
 
     # returns true if the LC exists
@@ -159,6 +165,12 @@ class AutoscaleGroup:
 
     # kill off asg and recreate it
     def reload(self):
+        # skip deactivation if it doesn't exist
+        asgroup = self.get_asgroup()
+        if not asgroup or not self.exists():
+            self.activate()
+            return
+
         debug("In asgroup.py reload")
         if not util.confirm("Are you sure you want to tear down the {} ASgroup and recreate it?".format(self.name())):
             return
@@ -204,6 +216,7 @@ class AutoscaleGroup:
                     sleep(30)
                 except KeyboardInterrupt:
                     pprint("Got impatient.")
+                    sys.exit(1)
                 interval = 10
                 tries = 20
                 for x in range(0,tries):
@@ -217,6 +230,7 @@ class AutoscaleGroup:
                             break
                     except KeyboardInterrupt:
                         pprint("Got impatient")
+                        sys.exit(1)
                     except ValueError as e:
                         pprint(e)
                         pass
