@@ -87,8 +87,10 @@ clusters:
             - '10.20.0.0/16'
         # for instance roles
         iam_profile: 'developer'
+        # optional
+        tenancy: 'dedicated'  # VPC 'default' or 'dedicated' hardware
         # application roles for instances
-        # think: sub-clusters that can be managed as distinct sets
+        # (sub-clusters that can be managed as distinct sets)
         roles:
             webapp:
                 instance_type: 'm3.medium'

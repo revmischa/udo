@@ -210,6 +210,10 @@ class LaunchConfig:
         # get configuration for this LC
         cfg = self.role_config
 
+        tenancy = cfg.get('tenancy')
+        if not tenancy:
+            tenancy='default'
+
         # NOTE: wrap the following in a try block to catch errors
         lc = conn.create_launch_configuration(
             AssociatePublicIpAddress = True, # this is required to make your stuff actually work
@@ -219,7 +223,8 @@ class LaunchConfig:
             InstanceType = cfg.get('instance_type'),
             KeyName = cfg.get('keypair_name'),
             UserData = self.cloud_init_script(),
-            SecurityGroups = cfg.get('security_groups')
+            SecurityGroups = cfg.get('security_groups'),
+            PlacementTenancy = tenancy,
         )
         #if not conn.create_launch_configuration(lc):
         #    print "Error creating LaunchConfig {}".format(name)

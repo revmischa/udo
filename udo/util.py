@@ -34,7 +34,7 @@ def connection_args():
     _region = region()
     if not _region:
         # use the default region, I guess?
-        print "Warning: default region is not configured"
+        print("Warning: default region is not configured")
         return "us-east-1"
 
     args = {

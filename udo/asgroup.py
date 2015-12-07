@@ -114,7 +114,7 @@ class AutoscaleGroup:
         conn = util.as_conn()
         if oldlc.name() is not lcname:
             debug("deleting Launchconfig " + oldlc.name())
-            conn.delete_launch_configuration ( LaunchConfigurationName = oldlc.name() )
+            conn.delete_launch_configuration( LaunchConfigurationName = oldlc.name() )
 
     def get_asgroup(self):
         debug("In asgroup.py get_asgroup")
@@ -219,6 +219,7 @@ class AutoscaleGroup:
                     sys.exit(1)
                 interval = 10
                 tries = 20
+                # FIXME: use waiters when they get added to boto3...
                 for x in range(0,tries):
                     try:
                         if self.get_num_instances() != 0:
