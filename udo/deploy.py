@@ -216,8 +216,8 @@ class Deploy:
 
     def stop_deployment(self):
         debug("in deploy.py stop_deployment")
-        last_dep = self.get_last_deployment()
-        self.conn.stop_deployment(deploymentId = last_dep_id)
+        last_dep_id = self.get_last_deployment()
+        self.conn.stop_deployment(deploymentId=last_dep_id)
         print "Stopped {}".format(last_dep_id)
         self.print_deployment(last_dep_id)
 
@@ -228,6 +228,7 @@ class Deploy:
             if not len(deps):
                 return None
             last_dep_id = deps[0]
+            return last_dep_id
 
         deps = self.conn.list_deployments(applicationName=self.app_name(), deploymentGroupName=deployment_group_name)['deployments']
         if not deps:
