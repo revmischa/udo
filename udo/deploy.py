@@ -177,10 +177,7 @@ class Deploy:
                 pass
 
             try:
-                if e:
-                    sleep(interval)
-                else:
-                    break
+                sleep(interval)
             except KeyboardInterrupt:
                 break
 
@@ -194,38 +191,49 @@ class Deploy:
             pprint("group: " + str(group))
             pprint("application_name: " + application_name)
             if _length > 1:
-              print("")
+                print("")
             _length = _length - 1
 
     def print_last_deployment(self, **kwargs):
         debug("in deploy.py print_last_deployment")
         application_name = self.app_name()
-
+        group_name = None
         if not kwargs:
             print("No deployment group specified.  Listing info for all of them.")
             deployment_groups = self.conn.list_deployment_groups(applicationName=application_name)['deploymentGroups']
+            for deployment_group in deployment_groups:
+                last_dep = self.get_last_deployment(deployment_group)
+                if not last_dep:
+                    continue
+                self.print_deployment(last_dep)
+        elif 'deployment_group_name' in kwargs:
+            # list a specific group?
+            dep = self.get_last_deployment(kwargs['deployment_group_name'])
+            self.print_deployment(dep)
         else:
-            deployment_groups=[]
-            deployment_groups.append(kwargs['deployment_group_name'])
+            raise ValueError("unknown kwargs for print_last_deployment")
 
-        for deployment_group in deployment_groups:
-            deps = self.conn.list_deployments( applicationName=application_name, deploymentGroupName=deployment_group)['deployments']
-            last_deployment = deps[0]
-            if not len(deps):
-                print "No deployments found"
-                return
-            self.print_deployment(last_deployment)
 
     def stop_deployment(self):
         debug("in deploy.py stop_deployment")
-        deps = self.conn.list_deployments()['deployments']
-        if not len(deps):
-            print "No deployments found"
-            return
-        last_dep_id = deps[0]
+        last_dep = self.get_last_deployment()
         self.conn.stop_deployment(deploymentId = last_dep_id)
         print "Stopped {}".format(last_dep_id)
-        self.print_last_deployment()
+        self.print_deployment(last_dep_id)
+
+    def get_last_deployment(self, deployment_group_name=None):
+        if not deployment_group_name:
+            # just get last
+            deps = self.conn.list_deployments()['deployments']
+            if not len(deps):
+                return None
+            last_dep_id = deps[0]
+
+        deps = self.conn.list_deployments(applicationName=self.app_name(), deploymentGroupName=deployment_group_name)['deployments']
+        if not deps:
+            return None
+        last_deployment = deps[0]
+        return last_deployment
 
     def print_deployment(self, dep_id):
         debug("in deploy.py print_deployment")
