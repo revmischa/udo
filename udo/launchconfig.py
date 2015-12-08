@@ -200,7 +200,6 @@ class LaunchConfig:
         conn = util.as_conn()
         name = self.name()
 
-        print("name: " + name + ", exists: " + str(self.exists()))
         if self.exists():
             debug("in launchconfig.py self.exists()")
             # NOTE: I don't think program logic ever gets here
