@@ -103,7 +103,7 @@ class AutoscaleGroup:
         asgroup = self.get_asgroup() # set lc
         asg_name = asgroup['AutoScalingGroupName']
 
-        lcname = lc.name()
+        lcname = lc.get_lc_server_name()
         
         client = util.as_conn()
         debug("updating asg: " + asg_name + " with LaunchConfig " + lcname)
@@ -112,9 +112,10 @@ class AutoscaleGroup:
 
         # delete old
         conn = util.as_conn()
-        if oldlc.name() is not lcname:
-            debug("deleting Launchconfig " + oldlc.name())
-            conn.delete_launch_configuration( LaunchConfigurationName = oldlc.name() )
+        oldname = oldlc.get_lc_server_name()
+        if oldname is not lcname:
+            debug("deleting Launchconfig " + oldname)
+            conn.delete_launch_configuration(LaunchConfigurationName = oldname)
 
     def get_asgroup(self):
         debug("In asgroup.py get_asgroup")
