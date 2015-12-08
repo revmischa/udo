@@ -115,11 +115,11 @@ class Deploy:
 
         debug("in deploy.py create: deploymentId: " + deployment_id)
 
-        pprint("Waiting 20 seconds to give AWS a chance to complete deployment")
+        pprint("Waiting for deployment...")
         try:
-            sleep(20)
+            sleep(5)
         except KeyboardInterrupt:
-            pprint("Got impatient")
+            return
 
         interval = 20
         tries = 20
@@ -162,7 +162,7 @@ class Deploy:
                 elif status == 'Queued':
                     raise ValueError("deployment is Queued")
                 elif status == 'InProgress':
-                    raise ValueError("deployment is InProgress")
+                    print("."),
                 elif status == 'Stopped':
                     _msg = 'deployment to deployment group' + group_name + ' is stopped'
                     util.message_integrations(_msg)
@@ -171,19 +171,18 @@ class Deploy:
                     pprint("status: " + str(status))
                     sys.exit(1)
             except KeyboardInterrupt:
-                pprint("Got impatient")
+                break
             except ValueError as e:
                 pprint(e)
                 pass
 
             try:
                 if e:
-                    pprint("pausing " + str(interval) + " seconds")
                     sleep(interval)
                 else:
                     break
             except KeyboardInterrupt:
-                pprint("Got impatient")
+                break
 
     # NOTE: Should figure out why original author of udo was getting 'deps' info
     def list_deployments(self, dep_id=None, group=None):
