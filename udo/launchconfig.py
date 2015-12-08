@@ -145,7 +145,7 @@ class LaunchConfig:
             self.activate()
             return self
         # generate a name for the new lc version
-        name = self.name()
+        name = self.get_lc_server_name()
         vermatch = re.search(r'-v(\d+)$', name)
         if vermatch:
             # increment version #
@@ -175,6 +175,9 @@ class LaunchConfig:
         # if we didnt find a LaunchConfig above by the time we get to here, return None
         return None
 
+    def get_lc_server_name(self):
+        return self.get_lc()['LaunchConfigurationName']
+
     # this could use more error checking to see if the launchconfig delete actually happened
     def deactivate(self):
         debug("in launchconfig.py deactivate")
@@ -197,8 +200,9 @@ class LaunchConfig:
         conn = util.as_conn()
         name = self.name()
 
+        print("name: " + name + ", exists: " + str(self.exists()))
         if self.exists():
-            pprint("in launchconfig.py self.exists()")
+            debug("in launchconfig.py self.exists()")
             # NOTE: I don't think program logic ever gets here
             if not util.confirm("LaunchConfig {} already exists, overwrite?".format(name)):
                 pprint("in launchconfig.py activate: Confirmed overwriting LaunchConfig")
