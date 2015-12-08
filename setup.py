@@ -28,7 +28,7 @@ Read the README for more information: https://github.com/revmischa/udo/blob/mast
 
 setup(
     name='udo',
-    version='3.0.3',
+    version='3.0.4',
     url='http://github.com/revmischa/udo',
     license='Anyone But RMS',
     author='Mischa Spiegelmock',
