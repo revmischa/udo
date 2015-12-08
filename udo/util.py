@@ -7,6 +7,7 @@ import os
 import socket
 import sys
 import urllib2
+import botocore
 
 from pprint import pprint
 from time import sleep
@@ -73,28 +74,25 @@ def confirm(msg):
 # keep trying proc until timeout or no exception is thrown
 # use this when you're waiting for a change to take effect
 # FIXME: actually respect timeout
-# FIXME: this depends on boto . does not work with boto3 yet
-# There's some polling stuff in boto3 that should help replace this
-# There's probably something in botocore that will replace this
-#
-#def retry(proc, timeout):
-#    debug("in util.py retry")
-#    success = False
-#    ret = None
-#    while success == False:
-#        try:
-#            ret = proc()     
-#            success = True
-#        except boto.exception.BotoServerError as e:
-#            if default_config().get('debug'):
-#                # dump response
-#                print "Error: {}, retrying...".format(e)
-#            else:
-#                print('.'),
-#            sys.stdout.flush()
-#            sleep(5)
-#    print "\n"
-#    return ret
+# "waiters" are better but they are not implemented for everything we need (yet)
+def retry(proc, timeout):
+    debug("in util.py retry")
+    success = False
+    ret = None
+    while success == False:
+        try:
+            ret = proc()     
+            success = True
+        except botocore.exceptions.ClientError as e:
+            if default_config().get('debug'):
+                # dump response
+                print "Error: {}, retrying...".format(e)
+            else:
+                print('.'),
+                sys.stdout.flush()
+                sleep(5)
+    print "\n"
+    return ret
 
 def user_and_host():
     debug("in util.py user_and_host")

@@ -176,8 +176,7 @@ class AutoscaleGroup:
             return
         util.message_integrations("Reloading ASgroup {}".format(self.name()))
         self.deactivate()
-        #util.retry(lambda: self.activate(), 60)
-        self.activate()
+        util.retry(lambda: self.activate(), 60)
 
     def deactivate(self): # a.k.a asg destroy
         # NOTE
@@ -203,7 +202,7 @@ class AutoscaleGroup:
             num_instances = len(asg_info['AutoScalingGroups'][0]['Instances'])
             if self.get_num_instances() == 0:
                 pprint("There are no instances in asg: " + asg_name)
-                pprint("Deleting asg: " + asg_name)
+                print("Deleting asg: " + asg_name)
                 response = ag.delete_auto_scaling_group( AutoScalingGroupName=asg_name )
                 util.message_integrations("Deleted ASgroup {}".format(asg_name))
             else:
@@ -212,45 +211,13 @@ class AutoscaleGroup:
                 debug("by setting to 0 MinSize, MaxSize, DesiredCapacity")
                 response = ag.update_auto_scaling_group(AutoScalingGroupName = asg_name, MinSize=0, MaxSize=0, DesiredCapacity=0)
                 debug("Waiting 30 seconds to give AWS time to terminate the instances")
-                try:
-                    sleep(30)
-                except KeyboardInterrupt:
-                    pprint("Got impatient.")
-                    sys.exit(1)
-                interval = 10
-                tries = 20
-                # FIXME: use waiters when they get added to boto3...
-                for x in range(0,tries):
-                    try:
-                        if self.get_num_instances() != 0:
-                            raise ValueError("there are still instances in the ASG")
-                            break
-                        else:
-                            # if num instances in asg is 0,
-                            # we are clear to delete
-                            break
-                    except KeyboardInterrupt:
-                        pprint("Got impatient")
-                        sys.exit(1)
-                    except ValueError as e:
-                        pprint(e)
-                        pass
 
-                    try:
-                        if e:
-                            pprint("pausing " + str(interval) + " seconds")
-                            sleep(interval)
-                        else:
-                            break
-                    except KeyboardInterrupt:
-                        pprint("Got impatient")
-       
-                if self.get_num_instances() == 0 or not self.get_num_instances():
-                    pprint("instances in asg deleted.")
-                    response = ag.delete_auto_scaling_group( AutoScalingGroupName=asg_name )
-                    util.message_integrations("Deleted ASgroup {}".format(asg_name))
-                else:
-                    pprint("unable to delete instances in asg.")
+                if self.get_num_instances() != 0:
+                    util.retry(lambda: ag.delete_auto_scaling_group(AutoScalingGroupName=asg_name), 300)
+                if self.get_num_instances() != 0 or self.get_num_instances():
+                    print("unable to delete instances in asg.")
+                    return False
+                util.message_integrations("Deleted ASgroup {}".format(asg_name))
 
         # if launch config exists, delete it 
         lc = self.lc()
@@ -258,6 +225,7 @@ class AutoscaleGroup:
             print("launchconfig does not exist.  Maybe you deleted it already?")
         else:
             lc.deactivate()
+        return True
 
     def get_subnet_ids_by_cidrs(self, cidrs):
         debug("In asgroup.y get_subnet_ids_by_cidrs")
