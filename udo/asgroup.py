@@ -70,7 +70,7 @@ class AutoscaleGroup:
             if 'LaunchConfigurationName' in asgroup:
                 blc = asgroup['LaunchConfigurationName']
             if blc and 'LaunchConfigurationName' in blc:
-                    lc.set_name(blc)
+                lc.set_name(blc)
         return lc
 
     # returns true if the LC exists
@@ -86,9 +86,9 @@ class AutoscaleGroup:
             print "Timed out waiting to create LaunchConfiguration"
             return false
         if lc.exists():
-            print "Using LaunchConfig {}".format(lc.name())
+            print "Using LaunchConfig {}".format(lc.get_lc_server_name())
             return True
-        print "Creating LaunchConfig {}".format(lc.name())
+        print "Creating LaunchConfig {}".format(lc.get_lc_server_name())
         return lc.activate()
 
     # we can't modify a launchconfig in place, we have to create
@@ -197,7 +197,7 @@ class AutoscaleGroup:
         asg_info = ag.describe_auto_scaling_groups( AutoScalingGroupNames = [ asg_name ] )
 
         if not asg_info['AutoScalingGroups']:
-            print("ASG does not exist.  Maybe it was already deleted? ")
+            print("ASG does not exist.  Maybe it was already deleted?")
         else:
             # delete the ASG
             num_instances = len(asg_info['AutoScalingGroups'][0]['Instances'])
@@ -267,7 +267,7 @@ class AutoscaleGroup:
         else:
             pprint("No availability_zones set")
 
-       # VPCZoneIdentifier ( which can be plural ) takes a string
+        # VPCZoneIdentifier ( which can be plural ) takes a string
         subnet_ids_string=''
         _length = len(subnet_ids)
         for subnet_id in subnet_ids:
@@ -280,7 +280,7 @@ class AutoscaleGroup:
         cfg_args['AutoScalingGroupName'] = self.name()
         cfg_args['DesiredCapacity'] = cfg.get('scale_policy')['desired']
         cfg_args['LoadBalancerNames'] = cfg.get('elbs')
-        cfg_args['LaunchConfigurationName'] = self.lc().name()
+        cfg_args['LaunchConfigurationName'] = self.lc().get_lc_server_name()
         cfg_args['MaxSize'] = cfg.get('scale_policy', 'max_size')
         cfg_args['MinSize'] = cfg.get('scale_policy', 'min_size')
         cfg_args['VPCZoneIdentifier'] = subnet_ids_string

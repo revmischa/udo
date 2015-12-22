@@ -183,15 +183,16 @@ class LaunchConfig:
         debug("in launchconfig.py deactivate")
         if not self.exists():
             return
-        print "Deleting launchconfig..."
+        lcname = self.get_lc_server_name()
+        print "Deleting launchconfig {}...".format(lcname)
         client = util.as_conn()
-        response = client.delete_launch_configuration( LaunchConfigurationName = self.name() )
+        response = client.delete_launch_configuration( LaunchConfigurationName = lcname )
         sleep(5) # give aws a chance to delete the launchconfig
         try:
-            response = client.describe_launch_configurations( LaunchConfigurationName = self.name() )
-            util.message_integrations("Failed to delete LaunchConfig {}".format(self.name()))
+            response = client.describe_launch_configurations( LaunchConfigurationName = lcname )
+            util.message_integrations("Failed to delete LaunchConfig {}".format(lcname))
         except:
-            util.message_integrations("Deleted LaunchConfig {}".format(self.name()))
+            util.message_integrations("Deleted LaunchConfig {}".format(lcname))
 
     # creates the LaunchConfig
     # returns True if LaunchConfig exists
