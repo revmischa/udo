@@ -88,7 +88,7 @@ class AutoscaleGroup:
         if lc.exists():
             print "Using LaunchConfig {}".format(lc.get_lc_server_name())
             return True
-        print "Creating LaunchConfig {}".format(lc.get_lc_server_name())
+        print "Creating LaunchConfig {}".format(lc.name())
         return lc.activate()
 
     # we can't modify a launchconfig in place, we have to create
