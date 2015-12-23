@@ -96,11 +96,11 @@ class AutoscaleGroup:
     def update_lc(self):
         debug("In asgroup.py update_lc")
         oldlc = self.lc()
-        #
-        # NOTE:  Why does this try to delete the LaunchConfig ?
-        lc = oldlc.update() # get new version
+        oldname = oldlc.get_lc_server_name()
 
-        asgroup = self.get_asgroup() # set lc
+        lc = oldlc.update() # create new version
+
+        asgroup = self.get_asgroup()
         asg_name = asgroup['AutoScalingGroupName']
 
         lcname = lc.get_lc_server_name()
@@ -112,8 +112,8 @@ class AutoscaleGroup:
 
         # delete old
         conn = util.as_conn()
-        oldname = oldlc.get_lc_server_name()
         if oldname is not lcname:
+            # TODO: waiter
             debug("deleting Launchconfig " + oldname)
             conn.delete_launch_configuration(LaunchConfigurationName = oldname)
 
