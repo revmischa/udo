@@ -28,7 +28,7 @@ Read the README for more information: https://github.com/revmischa/udo/blob/mast
 
 setup(
     name='udo',
-    version='3.0.7',
+    version='3.0.8',
     url='http://github.com/revmischa/udo',
     license='Anyone But RMS',
     author='Mischa Spiegelmock',
@@ -45,7 +45,7 @@ setup(
         'wheel==0.24.0',
     ],
     author_email='revmischa@cpan.org',
-    description='Automate AWS Deployments',
+    description='Automate AWS Orchestration and Deployments',
     long_description=long_description,
     packages=['udo'],
     include_package_data=True,
