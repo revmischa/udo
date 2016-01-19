@@ -172,19 +172,20 @@ class Udo:
             dep.create(group, commit_id)
         elif action == 'last':
             dep = deploy.Deploy()
-            group = None
+            group_name = None
             if len(args) == 1:
-                group = args.pop(0)
-                dep.print_last_deployment(deployment_group_name=group)
-            else:
-                dep.print_last_deployment()
+                group_name = args.pop(0)
+            dep.print_last_deployment(deployment_group_name=group)
         elif action == 'status':
             deploymentId = args.pop(0)
             dep = deploy.Deploy()
             print(dep.deployment_status(deploymentId))
         elif action == 'stop':
             dep = deploy.Deploy()
-            dep.stop_deployment()
+            group_name = None
+            if len(args) == 1:
+                group_name = args.pop(0)
+            dep.stop_deployment(deployment_group_name=group_name)
         elif len(args) == 1:
             # assume we want to create a deployment
             group = action

@@ -121,8 +121,8 @@ class Deploy:
         except KeyboardInterrupt:
             return
 
-        interval = 20
-        tries = 20
+        interval = 5
+        tries = 60
         # deployment_status[status] will be:
         # 'Created'|'Queued'|'InProgress'|'Succeeded'|'Failed'|'Stopped',
         #
@@ -214,9 +214,9 @@ class Deploy:
             raise ValueError("unknown kwargs for print_last_deployment")
 
 
-    def stop_deployment(self):
+    def stop_deployment(self, deployment_group_name=None):
         debug("in deploy.py stop_deployment")
-        last_dep_id = self.get_last_deployment()
+        last_dep_id = self.get_last_deployment(deployment_group_name=deployment_group_name)
         self.conn.stop_deployment(deploymentId=last_dep_id)
         print "Stopped {}".format(last_dep_id)
         self.print_deployment(last_dep_id)
