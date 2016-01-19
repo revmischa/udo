@@ -175,7 +175,7 @@ class Udo:
             group_name = None
             if len(args) == 1:
                 group_name = args.pop(0)
-            dep.print_last_deployment(deployment_group_name=group)
+            dep.print_last_deployment(deployment_group_name=group_name)
         elif action == 'status':
             deploymentId = args.pop(0)
             dep = deploy.Deploy()
