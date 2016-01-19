@@ -138,9 +138,7 @@ class Deploy:
                     util.message_integrations(_msg)
                     # NOTE: this is where we would run a jenkins batch job
                     post_deploy_hooks = self.get_post_deploy_hooks(application_name, group_name)
-                    if not post_deploy_hooks:
-                        pprint("No post deploy hooks defined")
-                    else:
+                    if post_deploy_hooks:
                         for post_deploy_hook in post_deploy_hooks:
                             print("running: " + post_deploy_hook)
                             try:
