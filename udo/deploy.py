@@ -22,7 +22,7 @@ from util import debug
 _cfg = config.Config()
 
 class Deploy:
-    """ describe class here"""
+    """Handles deployment via AWS CodeDeploy service. Creates/views/stops deployments."""
     # role_name is optional
     # cluster_name is kinda optional
     def __init__(self, cluster_name=None, role_name=None):
@@ -271,8 +271,10 @@ class Deploy:
             print " - Application: {}".format(name)
 
     def list_deployment_group_info(self, application, group_name):
+        if not application:
+            application = self.app_name()
         group = self.conn.get_deployment_group(applicationName=application, deploymentGroupName=group_name)
-        pprint(group)
+        # pprint(group)
         #sys.exit(1)
         info = group['deploymentGroupInfo']
         style = info['deploymentConfigName']
@@ -290,12 +292,17 @@ class Deploy:
 
     def list_groups(self, application=None):
         debug("in deploy.py list_groups")
-        application = self.app_name()
-        groups = self.conn.list_deployment_groups(applicationName=application)
-        # TODO: fetch more groups via next_token if available
+        groups = self.get_groups(application)
         group_names = groups['deploymentGroups']
         for name in group_names:
             self.list_deployment_group_info(application, name)
+
+    def get_groups(self, application=None):
+        if not application:
+            application = self.app_name()
+        # TODO: fetch more groups via next_token if available
+        groups = self.conn.list_deployment_groups(applicationName=application)
+        return groups
 
     def list_configs(self):
         debug("in deploy.py list_configs")

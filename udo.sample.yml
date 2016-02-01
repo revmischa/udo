@@ -109,7 +109,7 @@ clusters:
                     - 'myapp-static'
                 tags:
                     'myapp-web-workers': 10
-                # TODO deployment_group: 'dev-webapp'
+                deployment_group: 'dev-webapp'  # CodeDeploy DeploymentGroup name
             worker:
                 # you can stick cloud_init_extra on clusters/roles to run a custom script
                 cloud_init_extra: |
@@ -122,6 +122,7 @@ clusters:
                     min_size: 1
                     max_size: 4
                     desired: 1
+                deployment_group: 'dev-worker'
     qa:
         # ...
     stage:

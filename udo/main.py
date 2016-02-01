@@ -20,15 +20,16 @@ class Udo:
     # launchconfig
     def lc(self, *args):
         args = list(args)
-        if not len(args) or not args[0]:
+        if not len(args) >= 2:
             print "launchconfig command requires an action. Valid actions are: "
             print " cloudinit (cluster).(role) - view cloud_init bootstrap script"
             print " create (cluster).(role) - create launch configuration"
             print " destroy (cluster).(role) - delete launch configuration"
             return
         action = args.pop(0)
+        target = args.pop(0)
 
-        cluster,role,extra = self.get_cluster_and_role_from_args(*args)
+        cluster,role = self.get_cluster_and_role_from_args(target)
 
         if not cluster or not role:
             return
@@ -59,11 +60,12 @@ class Udo:
             print " scale (cluster).(role) - view current scaling settings"
             print " scale (cluster).(role) (desired) - set desired number of instances"
             return
-        action = args.pop(0)
-
         # TODO: hook up 'list'
 
-        cluster, role, extra = self.get_cluster_and_role_from_args(*args)
+        action = args.pop(0)
+        target = args.pop(0)
+
+        cluster, role = self.get_cluster_and_role_from_args(target)
         if not cluster or not role:
             return
 
@@ -88,12 +90,10 @@ class Udo:
             print(random.choice(ips))
         elif action == 'scale':
             # get scale arg
-            if extra:
-                scale = int(extra)
-                print("in main.py: ag.scale(scale)")
+            if len(args):
+                scale = int(args.pop(0))
                 ag.scale(scale)
             else:
-                print("in main.py: ag.get_scale_size()")
                 ag.get_scale_size()
         else:
             print "Unrecognized asgroup action {}".format(action)
@@ -148,7 +148,7 @@ class Udo:
             dep = deploy.Deploy()
             group_name = None
             if len(args) == 1:
-                group_name = args.pop(0)
+                group_name = self.get_deployment_group_name(args.pop(0))
             dep.print_last_deployment(deployment_group_name=group_name)
         elif action == 'status':
             deploymentId = args.pop(0)
@@ -158,16 +158,38 @@ class Udo:
             dep = deploy.Deploy()
             group_name = None
             if len(args) == 1:
-                group_name = args.pop(0)
+                group_name = self.get_deployment_group_name(args.pop(0))
             dep.stop_deployment(deployment_group_name=group_name)
         elif len(args) == 1:
             # assume we want to create a deployment
-            group = action
+            group_name = self.get_deployment_group_name(action)
             commit_id = args.pop(0)
             dep = deploy.Deploy()
-            dep.create(group, commit_id)
+            dep.create(group_name, commit_id)
         else:
             print "Unknown deploy command: {}".format(action)
+
+    # takes either a deploymentgroup name or a cluster.role name and returns deploymentgroup name
+    def get_deployment_group_name(self, group_arg):
+        group_name = group_arg  # default to using arg as deploymentgroup name
+
+        # check to see if group_arg is a valid deploymentegroup name or valid cluster/role
+        dep = deploy.Deploy()
+        groups = dep.get_groups()
+        group_names = groups['deploymentGroups']
+        if group_name not in group_names: # not valid deployment group name
+            # look in config for group name from cluster/role
+            cluster,role = self.get_cluster_and_role_from_args(group_arg, quiet=True)
+            if role:
+                cfg = config.get_role_config(cluster, role)
+                group_name = cfg.get('deployment_group')
+                if not group_name:
+                    print("Failed to find DeploymentGroup name in configuration for role {}".format(role))
+                    return None
+            else:
+                print("Invalid DeploymentGroup name '{}' and no deployment_group is configured for this role.".format(group_arg))
+                return None
+        return group_name
 
     def version(self, *args):
         args = list(args)
@@ -187,14 +209,17 @@ class Udo:
         else:
             print "Unknown test command: {}".format(action)
 
-    # returns cluster_name,role_name,rest_of_args
-    def get_cluster_and_role_from_args(self, *args):
-        args = list(args)
+    # returns cluster_name,role_name
+    def get_cluster_and_role_from_args(self, arg, quiet=False):
+        def fale(msg):
+            if not quiet:
+                print(msg)
+            return None,None
+
         # need cluster/role
-        if len(args) < 1:
-            print "Please specify cluster.role target for this command"
-            return None,None,None
-        cluster_role = args.pop(0)
+        if not arg:
+            return fale("Please specify cluster.role target for this command")
+        cluster_role = arg
 
         help = "Please specify the target of your action using the format: cluster.role"
 
@@ -204,45 +229,37 @@ class Udo:
             # split on .
             cluster_name, role_name = cluster_role.split(".")
             if not cluster_name:
-                print("Cluster name not specified.", help)
+                return fale("Cluster name not specified.", help)
             if not role_name:
-                print("Role name not specified.", help)
+                return fale("Role name not specified.", help)
         else:
             # assume we're just talking about a cluster with one role
             cluster_name = cluster_role
 
         cluster = config.get_cluster_config(cluster_name)
         if not cluster:
-            print "Unknown cluster {}".format(cluster_name)
-            return None,None,None
+            return fale("Unknown cluster {}".format(cluster_name))
 
         roles = cluster.get('roles')
         if not roles:
-            print "Invalid configuration for {}: no roles are defined".format(cluster_name)
-            return None,None,None
+            return fale("Invalid configuration for {}: no roles are defined".format(cluster_name))
 
         if not role_name:
             role_names = roles.keys()
             if len(role_names) == 1:
                 # assume the only role
-                print "No role specified, assuming {}".format(role_names[0])
+                print("No role specified, assuming {}".format(role_names[0]))
                 role_name = role_names[0]
             else:
-                print "Multiple roles available for cluster {}".format(cluster_name)
+                err = "Multiple roles available for cluster {}".format(cluster_name)
                 for r in role_names:
-                    print "  - {}".format(r)
-                return None,None,None
+                    err = err + "\n  - {}".format(r)
+                return fale(err)
 
         if not role_name in roles:
-            print("Role {} not found in cluster {} configuration".format(role_name, cluster_name))
-            return None,None,None
+            return fale("Role {} not found in cluster {} configuration".format(role_name, cluster_name))
 
-        # still stuff?
-        extra = None
-        if len(args):
-            extra = args.pop(0)
-
-        return cluster_name, role_name, extra
+        return cluster_name, role_name
 
 def invoke_console():
     # argument parsing
