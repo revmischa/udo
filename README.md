@@ -23,9 +23,6 @@ will manage.
 ```
 $ udo
 Valid commands are:
-  * cluster list - view state of clusters
-  * cluster status - view state of a cluster
-  * cluster create - create a VPC
   * lc cloudinit - display cloud-init script
   * lc create - create a launch configuration
   * lc destroy - delete a launch configuration
@@ -45,13 +42,13 @@ Valid commands are:
   * deploy stop - cancel last deployment
 
 # create a VPC from our config by name
-$ cluster activate dev webapp
+$ cluster activate dev.webapp
 
-# display our application launchconfig cloud-init script for the dev/webapp role
-$ udo lc cloudinit dev webapp   
+# display our application launchconfig cloud-init script for the dev.webapp role
+$ udo lc cloudinit dev.webapp   
 
 # terminates all instances in the qa-webapp group via scaling policy, deletes ASgroup and LC
-$ $ udo asg deactivate qa webapp
+$ $ udo asg deactivate qa.webapp
 Deleting... this may take a few minutes...
 . . . . . . . . . . . .
 Deleted ASgroup qa-webapp
@@ -59,7 +56,7 @@ Deleting launchconfig...
 Deleted LaunchConfig qa-webapp
 
 # delete and recreate ASgroup, super easy brain-dead way to reprovision a cluster
-$ udo asg reload prod worker
+$ udo asg reload prod.worker
 Are you sure you want to tear down the prod-worker ASgroup and recreate it? (y/n) y
 Reloading ASgroup prod-worker
 Deleting... this may take a few minutes...
@@ -74,7 +71,7 @@ AZs: ['us-west-2a', 'us-west-2b']
 Activated ASgroup prod-worker
 
 # change asgroup desired instance capacity
-$ udo asg scale prod worker 10
+$ udo asg scale prod.worker 10
 Cannot scale: 10 is greater than max_size (7)
 Increase max_size to 10? (y/n) y
 Changed ASgroup prod-worker desired_capacity from 4 to 10
@@ -82,7 +79,7 @@ Changed ASgroup prod-worker desired_capacity from 4 to 10
 # deploy with CodeDeploy
 $ udo deploy list groups
  - Group: MyCompany/stage
-$ udo deploy create stage 740800da74f1ebee37ed1ee         
+$ udo deploy stage 740800da74f1ebee37ed1ee        # N.B. "stage" is deployment group name, not cluster name 
 Deploying commit 750800da74 to deployment group: stage
  - MyCompany/stage
      Created: Friday, 30. January 2015 10:56PM
@@ -94,11 +91,12 @@ $ udo deploy list deployments
 
 # get random IP of an instance in a cluster
 # (very handy for SSH)
-$ udo asg randomip qa webapp
+$ udo asg randomip qa.webapp
 52.27.24.11
+$ ssh -l ec2-user `udo asg randomip qa.webapp`  # quick way to SSH to a host in a cluster.role
 
 # view cluster status
-asg instances stage webapp
+asg instances stage.webapp
 Group         ID          State     Status
 stage-webapp  i-565272b1  InService HEALTHY
 stage-webapp  i-515272af  InService HEALTHY
@@ -114,13 +112,15 @@ stage-webapp  i-e1581917  InService HEALTHY
 < UdoBot> Activated ASgroup prod-worker
 
 # update launchconfig for an existing autoscaling group (bonus feature not provided by AWS or boto)
-$ udo asg updatelc dev webapp
+$ udo asg updatelc dev.webapp
 ```
 
 # add scripts to run after a successful deploy ( known as a 'post_deploy_hook' ) by defining them in cluster:role:post_deploy_hook in udo.yml:
-                post_deploy_hook:
-                - 'curl -X POST https://jenkins.google.com/job/build_job1/buildWithParameters\?DEPLOY_ENV\=production --user jenkins:secrettoken'
-                - 'curl -X POST https://jenkins.google.com/job/build_job2/buildWithParameters\?DEPLOY_ENV\=production --user jenkins:secrettoken'
+```
+    post_deploy_hook:
+    - 'curl -X POST https://jenkins.google.com/job/build_job1/buildWithParameters\?DEPLOY_ENV\=production --user jenkins:secrettoken'
+    - 'curl -X POST https://jenkins.google.com/job/build_job2/buildWithParameters\?DEPLOY_ENV\=production --user jenkins:secrettoken'
+```
 
 ## What's all this then, eh?
 
@@ -169,7 +169,9 @@ Several Amazon engineers have reviewed Udo and given it their seal of approval. 
 ### Known Issues
 #### CodeDeploy:
 * When daemonizing in a CodeDeploy script hook, you must redirect stdout and stderr: `script.sh 1>/dev/null 2>&1 &` instead of `script.sh &` (For any jobs running in background)
-* For the current autoscaling behavior, When a new autoscaling instance spins up we deploy the last successfuly deployed revision for that deployment group to it and only put the instance in service if that deployment succeeded.For the Github case, it is possible to deploy a known commit to a deployment group however, we have yet to impliment branch tracking, so simply saying deploy HEAD is not supported at this time. We will try to implement this behavior as soon as possible.
+* For the current autoscaling behavior, When a new autoscaling instance spins up we deploy the last successfuly deployed revision for that deployment group to it and only put the instance in service if that deployment succeeded.For the Github case, it is possible to deploy a known commit to a deployment group however, we have yet to impliment branch tracking, so simply saying deploy HEAD is not supported at this time. We have filed a feature request with Amazon to support this.
+### Waiters
+* boto3 introduced "waiters" which allow you to wait for certain actions to complete. Unfortunately no waiters currently exist when performing AutoScaling or CodeDeploy actions. We have a feature request filed to support this.
 
 
 

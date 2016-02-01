@@ -10,7 +10,6 @@ import warnings
 from pprint import pprint
 
 import asgroup
-import cluster
 import config
 import deploy
 import launchconfig
@@ -18,39 +17,14 @@ import util
 
 # top-level commands go here
 class Udo:
-    def cluster(self, *args):
-        args = list(args)
-        if not len(args) or not args[0]:
-            print "cluster command requires an action. Valid actions are: "
-            print " list\n status"
-            return
-        action = args.pop(0)
-
-        if action == 'list':
-            cluster.list()
-        else:
-            # actions that require a cluster name
-            if not len(args) or not args[0]:
-                print "cluster name required for {}".format(action)
-                return
-            cluster_name = args.pop(0)
-            cl = cluster.Cluster(cluster_name)
-            if action == 'status':
-                print "{} status: {}".format(cluster_name, cl.status())
-            elif action == 'create':
-                if not cl.create():
-                    print "Failed to bring up {} cluster".format(cluster_name)
-            else:
-                print "Unknown cluster command: {}".format(action)
-
     # launchconfig
     def lc(self, *args):
         args = list(args)
         if not len(args) or not args[0]:
             print "launchconfig command requires an action. Valid actions are: "
-            print " cloudinit (cluster) (role) - view cloud_init bootstrap script"
-            print " create (cluster) (role) - create launch configuration"
-            print " destroy (cluster) (role) - delete launch configuration"
+            print " cloudinit (cluster).(role) - view cloud_init bootstrap script"
+            print " create (cluster).(role) - create launch configuration"
+            print " destroy (cluster).(role) - delete launch configuration"
             return
         action = args.pop(0)
 
@@ -76,14 +50,14 @@ class Udo:
         args = list(args)
         if not len(args) or not args[0]:
             print "asgroup command requires an action. Valid actions are: "
-            print " instances (cluster) (role) - list instances in group"
-            print " randomip (cluster) (role) - get an IP address of a host in the group"
-            print " create (cluster) (role) - create an autoscale group"
-            print " destroy (cluster) (role) - delete an autoscale group and terminate all instances"
-            print " reload (cluster) (role) - destroys asgroup and launchconfig, then recreates them"
-            print " updatelc (cluster) (role) - generates a new launchconfig version"
-            print " scale (cluster) (role) - view current scaling settings"
-            print " scale (cluster) (role) (desired) - set desired number of instances"
+            print " instances (cluster).(role) - list instances in group"
+            print " randomip (cluster).(role) - get an IP address of a host in the group"
+            print " create (cluster).(role) - create an autoscale group"
+            print " destroy (cluster).(role) - delete an autoscale group and terminate all instances"
+            print " reload (cluster).(role) - destroys asgroup and launchconfig, then recreates them"
+            print " updatelc (cluster).(role) - generates a new launchconfig version"
+            print " scale (cluster).(role) - view current scaling settings"
+            print " scale (cluster).(role) (desired) - set desired number of instances"
             return
         action = args.pop(0)
 
@@ -212,46 +186,62 @@ class Udo:
         else:
             print "Unknown test command: {}".format(action)
 
+    # returns cluster_name,role_name,rest_of_args
     def get_cluster_and_role_from_args(self, *args):
         args = list(args)
         # need cluster/role
         if len(args) < 1:
-            print "Please specify cluster name for this command"
+            print "Please specify cluster.role target for this command"
             return None,None,None
-        cluster = args.pop(0)
+        cluster_role = args.pop(0)
 
-        cluster_config = config.get_cluster_config(cluster)
-        if not cluster_config:
-            print "Unknown cluster {}".format(cluster)
-            return None,None,None
+        help = "Please specify the target of your action using the format: cluster.role"
 
-        # use role name if specified, otherwise assume they meant the obvious thing
-        # if there's only one role
-        if len(args):
-            role = args.pop(0)
+        cluster_name = None
+        role_name = None
+        if '.' in cluster_role:
+            # split on .
+            cluster_name, role_name = cluster_role.split(".")
+            if not cluster_name:
+                print("Cluster name not specified.", help)
+            if not role_name:
+                print("Role name not specified.", help)
         else:
-            roles = cluster_config.get('roles')
-            if not roles:
-                print "Cluster config for {} not found".format(cluster)
-                return None,None,None
+            # assume we're just talking about a cluster with one role
+            cluster_name = cluster_role
 
-            rolenames = roles.keys()
-            if len(rolenames) == 1:
+        cluster = config.get_cluster_config(cluster_name)
+        if not cluster:
+            print "Unknown cluster {}".format(cluster_name)
+            return None,None,None
+
+        roles = cluster.get('roles')
+        if not roles:
+            print "Invalid configuration for {}: no roles are defined".format(cluster_name)
+            return None,None,None
+
+        if not role_name:
+            role_names = roles.keys()
+            if len(role_names) == 1:
                 # assume the only role
-                print "No role specified, assuming {}".format(rolenames[0])
-                role = rolenames[0]
+                print "No role specified, assuming {}".format(role_names[0])
+                role_name = role_names[0]
             else:
-                print "Multiple roles available for cluster {}".format(cluster)
-                for r in rolenames:
+                print "Multiple roles available for cluster {}".format(cluster_name)
+                for r in role_names:
                     print "  - {}".format(r)
                 return None,None,None
- 
+
+        if not role_name in roles:
+            print("Role {} not found in cluster {} configuration".format(role_name, cluster_name))
+            return None,None,None
+
         # still stuff?
         extra = None
         if len(args):
             extra = args.pop(0)
 
-        return cluster, role, extra
+        return cluster_name, role_name, extra
 
 def invoke_console():
     # argument parsing
@@ -270,9 +260,6 @@ def invoke_console():
         # full command summary
         print """
 Valid commands are:
-  * cluster list - view state of clusters
-  * cluster status - view state of a cluster
-  * cluster create - create a VPC
   * lc cloudinit - display cloud-init script
   * lc create - create a launch configuration
   * lc destroy - delete a launch configuration
@@ -288,7 +275,7 @@ Valid commands are:
   * deploy list deployments - view CodeDeploy deployment statuses
   * deploy list configs - view CodeDeploy configurations
   * deploy list post - view post deploy hooks
-  * deploy create (group) (commit) - create new deployment for commit on group
+  * deploy [create] (group) (commit) - create new deployment for commit on group
   * deploy last - shows status of most recent deployment
   * deploy stop - cancel last deployment
   * version - print udo version

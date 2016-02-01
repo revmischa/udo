@@ -1,3 +1,5 @@
+# Note: this is not used anymore.
+
 import boto3
 import sys
 from pprint import pprint
