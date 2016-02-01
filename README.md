@@ -78,16 +78,23 @@ Changed ASgroup prod-worker desired_capacity from 4 to 10
 
 # deploy with CodeDeploy
 $ udo deploy list groups
- - Group: MyCompany/stage
-$ udo deploy stage 740800da74f1ebee37ed1ee        # N.B. "stage" is deployment group name, not cluster name 
+ - Group: MyApplicpation/stage
+$ udo deploy stage 740800da74f1ebee37ed1ee        # N.B. "stage" can be deployment group name or cluster.role name 
 Deploying commit 750800da74 to deployment group: stage
- - MyCompany/stage
+ - MyApplicpation/stage
      Created: Friday, 30. January 2015 10:56PM
      Status: InProgress
 $ udo deploy list deployments
- - MyCompany/stage
+ - MyApplicpation/stage
      Created: Friday, 30. January 2015 10:56PM
      Status: Success
+ [...]
+$ udo/main.py deploy last qa.webapp
+ - MyApplicpation/qa [d-XISPUQTMD]
+     Created: Wednesday, 27 January 2016 12:17PM
+     Status: Succeeded
+     Message: 
+     Commit: d41f2a3a61
 
 # get random IP of an instance in a cluster
 # (very handy for SSH)
