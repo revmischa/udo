@@ -33,6 +33,9 @@ Valid commands are:
   * asg updatelc - updates launchconfiguration in-place
   * asg scale - set desired number of instances
   * asg randomip - print IP address of random host in group
+  * asg policies - print autoscaling policies for group
+  * asg suspend - suspend autoscaling policies for group
+  * asg resume - resume autoscaling policies for group
   * deploy list apps - view CodeDeploy applications
   * deploy list groups - view CodeDeploy application deployment groups
   * deploy list deployments - view CodeDeploy deployment statuses
@@ -40,6 +43,7 @@ Valid commands are:
   * deploy create (group) (commit) - create new deployment for commit on group
   * deploy last - shows status of most recent deployment
   * deploy stop - cancel last deployment
+  * version - view udo version installed from PyPI
 
 # create a VPC from our config by name
 $ cluster activate dev.webapp

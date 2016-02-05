@@ -1,4 +1,12 @@
 ### TODO
 * Parallel-SSH integration (needs to be merged from another repo)
+
 * CodeDeploy support from S3
-* For all ASG in a CodeDeploy group, suspend all autoscaling processes before a CodeDeploy deploy (if there are autoscaling rules in the ASG).  After deploy is done, resume autoscaling processes in the ASG.  I added suspend and resume, I wasn't able to successfully suspend before a CodeDeploy deploy.  Working on it.
+
+* getting role and cluster name in create deploy in deploy.py, to pass to asgroup.py , is pretty dumb, uses regexp.  there
+must be a better way.
+
+* for each ASG in a CodeDeploy group, we suspend autoscaling processes before a CodeDeploy deploy.  After a successful or failed CodeDeploy deploy, we resume autoscaling processes in each ASG.  I should make suspend/resume autoscaling processes before a deploy be an option you can turn on/off.  I should make the 'resume' be a lifecycle hook that will eventually occur after a deploy, instead of doing it manually in udo.
+
+* sometimes CodeDeploy gets stuck because there is an old deploy still going on. We should provide a way to list the stuck deployment and kill it
+

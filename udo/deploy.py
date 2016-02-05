@@ -13,6 +13,7 @@ from datetime import datetime
 from dateutil.parser import parse
 from pprint import pprint
 
+import asgroup
 import config
 import util
 
@@ -92,6 +93,22 @@ class Deploy:
         #}
         msg = "Deploying commit {} to deployment group: {}".format(self.commit_id_display(commit_id), group_name)
 
+        deployment_asg_info = self.conn.get_deployment_group(applicationName=application_name,
+                    deploymentGroupName=group_name)['deploymentGroupInfo']['autoScalingGroups']
+
+        # NOTE: There is probably a better way of getting role_name and cluster_name
+        def asg_autoscaling_control(action):
+            for asg_info in deployment_asg_info:
+                _asg = (asg_info['name'])
+                cluster_name = re.search(r'^(.*?)-', _asg).group(1)
+                role_name = _asg.split(cluster_name + '-')[1]
+                asg = asgroup.AutoscaleGroup(cluster_name, role_name)
+                if action == 'suspend':
+                    asg.suspend()
+                elif action == 'resume':
+                    asg.resume()
+
+        asg_autoscaling_control('suspend')
 
         deployment = self.conn.create_deployment(applicationName=application_name,
             deploymentGroupName=group_name,
@@ -136,6 +153,7 @@ class Deploy:
                 if status == 'Succeeded':
                     _msg = 'Deployment of commit ' + commit_id + ' to deployment group: ' + group_name + ' successful.'
                     util.message_integrations(_msg)
+                    asg_autoscaling_control('resume')
                     # NOTE: this is where we would run a jenkins batch job
                     post_deploy_hooks = self.get_post_deploy_hooks(application_name, group_name)
                     if post_deploy_hooks:
@@ -153,6 +171,7 @@ class Deploy:
                                 pass
                     break
                 elif status == 'Failed':
+                    asg_autoscaling_control('resume')
                     _msg = "FAILURE to deploy commit ' + commid_id + ' to deployment group: ' + group_name"
                     break
                 elif status == 'Created':
