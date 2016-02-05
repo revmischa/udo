@@ -365,55 +365,50 @@ class AutoscaleGroup:
         return ips
 
     def policies(self):
+
+        def _status(msg1, msg2, color='white'):
+            print(colored(msg1, 'green') + ": " + colored(msg2, color))
+
         debug("In asgroup.py policies")
         name = self.name()
         asg_policies = self.conn.describe_policies( AutoScalingGroupName = name )['ScalingPolicies']
         if not asg_policies:
             print("no Scaling Policies defined for %s" % name) 
             return
-        print("Scaling Policies for %s:" % name)
-        print("Autoscaling Status:"),
-        if self.suspend_status():
-            print(colored("SUSPENDED", 'yellow'))
-        else:
-            print(colored("ACTIVE", 'green'))
 
-        print('')
+        if self.suspend_status():
+            _status("Scaling Policies for {}".format(name), 'SUSPENDED', 'yellow')
+        else:
+            _status("Scaling Policies for {}".format(name), 'ACTIVE', 'green')
+
         for asg_policy in asg_policies:
             debug(asg_policy)
-            ScalingPolicies = []
+            scaling_policies = []
             for key in asg_policy:
-                ScalingPolicies.append(key) 
-            ScalingPolicies.remove('AutoScalingGroupName')
-            print(colored("PolicyName: ", 'green') + (asg_policy['PolicyName']))
-            print(colored("PolicyARN: ", 'green') + (asg_policy['PolicyARN']))
-            print(colored("PolicyType: ", 'green') + (asg_policy['PolicyType']))
-            print(colored("AdjustmentType: ", 'green') + (asg_policy['AdjustmentType']))
-            print(colored("AlarmName:", 'green')),
-            print(asg_policy['Alarms'])[0]['AlarmName']
-            print(colored("AlarmArn:", 'green')),
-            print(asg_policy['Alarms'])[0]['AlarmARN']
-            StepAdjustments = asg_policy["StepAdjustments"]
-            if StepAdjustments == []:
-                print(colored("StepAdjustments: ", 'green') + "EMPTY")
+                scaling_policies.append(key) 
+            scaling_policies.remove('AutoScalingGroupName')
+            _status("PolicyName", asg_policy['PolicyName'])
+            _status("PolicyARN", asg_policy['PolicyARN'])
+            _status("PolicyType", asg_policy['PolicyType'])
+            _status("AdjustmentType", asg_policy['AdjustmentType'])
+            _status("AlarmName", asg_policy['Alarms'][0]['AlarmName'])
+            _status("AlarmArn", asg_policy['Alarms'][0]['AlarmARN'])
+            step_adjustments = asg_policy["StepAdjustments"]
+            if step_adjustments == []:
+                _status("StepAdjustments", "EMPTY")
             else:
-                for param in StepAdjustments[0]:
-                    print(colored("StepAdjustments {param}".format(param=param) + ":", 'green')),
-                    print(StepAdjustments)[0][param]
+                for param in step_adjustments[0]:
+                    _status("StepAdjustments {param}".format(param=param), step_adjustments[0][param])
             for policy in [ 'PolicyName', 'PolicyARN', 'PolicyType', 'AdjustmentType', 'Alarms', 'StepAdjustments' ]:
-                ScalingPolicies.remove(policy)
-            if 'ScalingAdjustment' in ScalingPolicies:
-                print(colored("ScalingAdjustment:", 'green')),
-                print(asg_policy['ScalingAdjustment'])
-                ScalingPolicies.remove('ScalingAdjustment')
-            if 'MetricAggregationType' in ScalingPolicies:
-                print(colored("MetricAggregationType:", 'green')), 
-                print(asg_policy['MetricAggregationType'])
-                ScalingPolicies.remove('MetricAggregationType')
-            if ScalingPolicies:
-                print(colored("unhandled policies: ")),
-                print(ScalingPolicies)
-            
+                scaling_policies.remove(policy)
+            if 'ScalingAdjustment' in scaling_policies:
+                _status("ScalingAdjustment", asg_policy["ScalingAdjustment"])
+                scaling_policies.remove('ScalingAdjustment')
+            if 'MetricAggregationType' in scaling_policies:
+                _status("MetricAggregationType", asg_policy['MetricAggregationType'])
+                scaling_policies.remove('MetricAggregationType')
+            if scaling_policies:
+                _status("unhandled policies", scaling_policies)
             print("")
 
     def suspend(self):
