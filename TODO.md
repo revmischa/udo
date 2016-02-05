@@ -10,3 +10,4 @@ must be a better way.
 
 * sometimes CodeDeploy gets stuck because there is an old deploy still going on. We should provide a way to list the stuck deployment and kill it
 
+* README.md is out of date
