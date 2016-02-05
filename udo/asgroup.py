@@ -2,6 +2,7 @@ import boto3
 import sys
 import time
 from pprint import pprint
+from termcolor import colored
 
 import config
 import util
@@ -362,3 +363,101 @@ class AutoscaleGroup:
         ec2_instances = ec2_conn.describe_instances( InstanceIds = ids )['Reservations']
         ips = [ instance['Instances'][0]['PublicIpAddress'] for instance in ec2_instances ]
         return ips
+
+    def policies(self):
+        debug("In asgroup.py policies")
+        name = self.name()
+        asg_policies = self.conn.describe_policies( AutoScalingGroupName = name )['ScalingPolicies']
+        if not asg_policies:
+            print("no Scaling Policies defined for %s" % name) 
+            return
+        print("Scaling Policies for %s:" % name)
+        print("Autoscaling Status:"),
+        if self.suspend_status():
+            print(colored("SUSPENDED", 'yellow'))
+        else:
+            print(colored("ACTIVE", 'green'))
+
+        print('')
+        for asg_policy in asg_policies:
+            debug(asg_policy)
+            ScalingPolicies = []
+            for key in asg_policy:
+                ScalingPolicies.append(key) 
+            ScalingPolicies.remove('AutoScalingGroupName')
+            print(colored("PolicyName: ", 'green') + (asg_policy['PolicyName']))
+            print(colored("PolicyARN: ", 'green') + (asg_policy['PolicyARN']))
+            print(colored("PolicyType: ", 'green') + (asg_policy['PolicyType']))
+            print(colored("AdjustmentType: ", 'green') + (asg_policy['AdjustmentType']))
+            print(colored("AlarmName:", 'green')),
+            print(asg_policy['Alarms'])[0]['AlarmName']
+            print(colored("AlarmArn:", 'green')),
+            print(asg_policy['Alarms'])[0]['AlarmARN']
+            StepAdjustments = asg_policy["StepAdjustments"]
+            if StepAdjustments == []:
+                print(colored("StepAdjustments: ", 'green') + "EMPTY")
+            else:
+                for param in StepAdjustments[0]:
+                    print(colored("StepAdjustments {param}".format(param=param) + ":", 'green')),
+                    print(StepAdjustments)[0][param]
+            for policy in [ 'PolicyName', 'PolicyARN', 'PolicyType', 'AdjustmentType', 'Alarms', 'StepAdjustments' ]:
+                ScalingPolicies.remove(policy)
+            if 'ScalingAdjustment' in ScalingPolicies:
+                print(colored("ScalingAdjustment:", 'green')),
+                print(asg_policy['ScalingAdjustment'])
+                ScalingPolicies.remove('ScalingAdjustment')
+            if 'MetricAggregationType' in ScalingPolicies:
+                print(colored("MetricAggregationType:", 'green')), 
+                print(asg_policy['MetricAggregationType'])
+                ScalingPolicies.remove('MetricAggregationType')
+            if ScalingPolicies:
+                print(colored("unhandled policies: ")),
+                print(ScalingPolicies)
+            
+            print("")
+
+    def suspend(self):
+        debug("In asgroup.py suspend")
+        name = self.name()
+        asg_policies = self.conn.describe_policies( AutoScalingGroupName = name )['ScalingPolicies']
+        if not asg_policies:
+            print("ASG %s has no autoscaling processes to suspend" % name)
+            return
+        if self.suspend_status():
+            print("ASG %s is already suspended" % name)
+            return
+        else:
+            group = []
+            group.append(name)
+            self.conn.suspend_processes( AutoScalingGroupName = name)
+            if self.suspend_status():
+                util.message_integrations("Suspended all autoscaling processes for {}".format(name))
+                return
+            else:
+                util.message_integrations("Failed to suspend autoscaling processes for {}".format(name))
+                return
+
+    def resume(self):
+        debug("In asgroup.py resume")
+        name = self.name()
+        asg_policies = self.conn.describe_policies( AutoScalingGroupName = name )['ScalingPolicies']
+        if not asg_policies:
+            print("ASG %s has no autoscaling processes to resume" % name)
+            return
+        if self.suspend_status():
+            self.conn.resume_processes( AutoScalingGroupName = name)
+        else:
+            print("ASG %s has no suspended processes to resume" % name)
+            return
+        if not self.suspend_status():
+            util.message_integrations("Resumed autoscaling processes for {}".format(name))
+            return
+        else:
+            util.message_integrations("Failed to resume autoscaling processes for {}".format(name))
+            return
+
+    def suspend_status(self):
+        name = self.name()
+        group = []
+        group.append(name)
+        return self.conn.describe_auto_scaling_groups( AutoScalingGroupNames = group )['AutoScalingGroups'][0]['SuspendedProcesses']
