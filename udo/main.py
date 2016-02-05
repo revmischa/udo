@@ -3,6 +3,7 @@
 
 import argparse 
 import os
+import pkg_resources
 import random
 import sys
 import warnings
@@ -59,6 +60,9 @@ class Udo:
             print " updatelc (cluster).(role) - generates a new launchconfig version"
             print " scale (cluster).(role) - view current scaling settings"
             print " scale (cluster).(role) (desired) - set desired number of instances"
+            print " policies (cluster).(role) - view current autoscaling policies"
+            print " suspend (cluster).(role) - suspend autoscaling for group"
+            print " resume (cluster.(role) - resume autoscaling for group"
             return
         # TODO: hook up 'list'
 
@@ -95,6 +99,12 @@ class Udo:
                 ag.scale(scale)
             else:
                 ag.get_scale_size()
+        elif action == 'policies':
+            ag.policies()
+        elif action == 'suspend':
+            ag.suspend()
+        elif action == 'resume':
+            ag.resume()
         else:
             print "Unrecognized asgroup action {}".format(action)
 
@@ -193,7 +203,10 @@ class Udo:
 
     def version(self, *args):
         args = list(args)
-        print('3.0.2')
+        try:
+            print(pkg_resources.get_distribution('udo').version)
+        except:
+            print("udo not installed from PyPi")
 
     # for testing features
     def test(self, *args):
@@ -288,6 +301,9 @@ Valid commands are:
   * asg updatelc - updates launchconfiguration in-place
   * asg scale - set desired number of instances
   * asg randomip - print IP address of random host in group
+  * asg policies - print autoscaling policies for group
+  * asg suspend - suspend autoscaling for group
+  * asg resume - resume autoscaling for group
   * deploy list apps - view CodeDeploy applications
   * deploy list groups - view CodeDeploy application deployment groups
   * deploy list deployments - view CodeDeploy deployment statuses

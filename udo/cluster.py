@@ -1,3 +1,4 @@
+"""
 # Note: this is not used anymore.
 
 import boto3
@@ -115,3 +116,5 @@ class Cluster:
         vpc.add_tag('udo', value=True)
 
         return True
+
+"""

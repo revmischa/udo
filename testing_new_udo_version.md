@@ -1,8 +1,8 @@
 ## testing new udo version
 
-#### change dir to root of your repo ( same dir you have been running udo from, so udo can find udo.yml )
+#### change dir to root of your repo ( same dir as udo.yml )
 
-#### uninstall systemwide udo, if its installed ( as root )
+#### uninstall systemwide udo, if its installed
     sudo pip uninstall udo
 
 #### make a new virtualenv ( not as root )
@@ -32,4 +32,6 @@
         wheel==0.24.0
 
 #### test
-    udo version
+    $ udo asg policies stage.worker 
+    $ udo asg suspend stage.worker
+    $ udo asg resume stage.worker 
