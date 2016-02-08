@@ -126,7 +126,7 @@ stage-webapp  i-e1581917  InService HEALTHY
 $ udo asg updatelc dev.webapp
 ```
 
-# add scripts to run after a successful deploy ( known as a 'post_deploy_hook' ) by defining them in cluster:role:post_deploy_hook in udo.yml:
+# post_deploy_hook
 ```
     post_deploy_hook:
     - 'curl -X POST https://jenkins.google.com/job/build_job1/buildWithParameters\?DEPLOY_ENV\=production --user jenkins:secrettoken'
