@@ -20,6 +20,8 @@ import util
 from time import sleep
 from util import debug
 
+_suspend_on_deploy = False
+
 _cfg = config.Config()
 
 class Deploy:
@@ -103,7 +105,8 @@ class Deploy:
                 elif action == 'resume':
                     asg.resume()
 
-        asg_autoscaling_control('suspend')
+        if _suspend_on_deploy:
+            asg_autoscaling_control('suspend')
 
         deployment = self.conn.create_deployment(applicationName=application_name,
             deploymentGroupName=group_name,
@@ -148,7 +151,8 @@ class Deploy:
                 if status == 'Succeeded':
                     _msg = 'Deployment of commit ' + commit_id + ' to deployment group: ' + group_name + ' successful.'
                     util.message_integrations(_msg)
-                    asg_autoscaling_control('resume')
+                    if _suspend_on_deploy:
+                        asg_autoscaling_control('resume')
                     # define actions in post_deploy_hooks in udo.yml
                     post_deploy_hooks = self.get_post_deploy_hooks(application_name, group_name)
                     if post_deploy_hooks:
@@ -166,7 +170,8 @@ class Deploy:
                                 pass
                     break
                 elif status == 'Failed':
-                    asg_autoscaling_control('resume')
+                    if _suspend_on_deploy:
+                        asg_autoscaling_control('resume')
                     _msg = "FAILURE to deploy commit ' + commid_id + ' to deployment group: ' + group_name"
                     break
                 elif status == 'Created':
