@@ -43,7 +43,7 @@ setup(
         'PyYAML==3.11',
         'six==1.10.0',
         'termcolor==1.1.0',
-        'wheel==0.24.0',
+        'wheel==0.27.0',
     ],
     author_email='revmischa@cpan.org',
     description='Automate AWS Orchestration and Deployments',
