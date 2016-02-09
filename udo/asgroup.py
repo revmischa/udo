@@ -415,7 +415,7 @@ class AutoscaleGroup:
         debug("In asgroup.py suspend")
         name = self.name()
         asg_policies = self.conn.describe_policies( AutoScalingGroupName = name )['ScalingPolicies']
-        if not asg_policies:
+        if not asg_policies: # if we cant find the status of any ScalingPolicies, there are no policies
             print("ASG %s has no autoscaling processes to suspend" % name)
             return
         if self.suspend_status():
@@ -423,7 +423,7 @@ class AutoscaleGroup:
             return
         else:
             group = []
-            group.append(name)
+            group.append(name) # I add a ASG name to a list because suspend_processes expects a list
             self.conn.suspend_processes( AutoScalingGroupName = name)
             if self.suspend_status():
                 util.message_integrations("Suspended all autoscaling processes for {}".format(name))

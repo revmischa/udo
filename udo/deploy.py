@@ -58,9 +58,6 @@ class Deploy:
 
     # create a deployment
     def create(self, group_name, commit_id):
-    # NOTE:
-    #
-    # we could put something at end that alerts if deployment was successful or not
         debug("in deploy.py create")
         cfg = self.config()
 
@@ -84,20 +81,18 @@ class Deploy:
         repo_name = source['repo']
 
         application_name = cfg['application']
-        #deploy_rev = {
-        #    'revisionType': 'GitHub',
-        #    'gitHubLocation': {
-        #        'repository': repo_name,
-        #        'commitId': commit_id,
-        #    }
-        #}
+
         msg = "Deploying commit {} to deployment group: {}".format(self.commit_id_display(commit_id), group_name)
 
         deployment_asg_info = self.conn.get_deployment_group(applicationName=application_name,
                     deploymentGroupName=group_name)['deploymentGroupInfo']['autoScalingGroups']
 
         # NOTE: There is probably a better way of getting role_name and cluster_name
+        # This depends on role_name and cluster_name being seperated with a "."
+        # This works but I don't like it
         def asg_autoscaling_control(action):
+            # This will suspend or resume every the autoscaling processes in every ASG that is
+            # part of the CodeDeploy group
             for asg_info in deployment_asg_info:
                 _asg = (asg_info['name'])
                 cluster_name = re.search(r'^(.*?)-', _asg).group(1)
@@ -143,8 +138,8 @@ class Deploy:
         # deployment_status[status] will be:
         # 'Created'|'Queued'|'InProgress'|'Succeeded'|'Failed'|'Stopped',
         #
-        # what you see in AWS dashboard appears to be current
-        # info you grab from the API is slightly delayed
+        # what you see in AWS dashboard is usually what the current state actually is.
+        # info you grab from the API appears to be slightly delayed
         #
         for x in range(0, tries):
             try:
@@ -154,7 +149,7 @@ class Deploy:
                     _msg = 'Deployment of commit ' + commit_id + ' to deployment group: ' + group_name + ' successful.'
                     util.message_integrations(_msg)
                     asg_autoscaling_control('resume')
-                    # NOTE: this is where we would run a jenkins batch job
+                    # define actions in post_deploy_hooks in udo.yml
                     post_deploy_hooks = self.get_post_deploy_hooks(application_name, group_name)
                     if post_deploy_hooks:
                         for post_deploy_hook in post_deploy_hooks:
@@ -198,7 +193,6 @@ class Deploy:
             except KeyboardInterrupt:
                 break
 
-    # NOTE: Should figure out why original author of udo was getting 'deps' info
     def list_deployments(self, dep_id=None, group=None):
         debug("in deploy.py list_deployments")
         application_name = self.app_name()
@@ -229,7 +223,6 @@ class Deploy:
             self.print_deployment(dep)
         else:
             raise ValueError("unknown kwargs for print_last_deployment")
-
 
     def stop_deployment(self, deployment_group_name=None):
         debug("in deploy.py stop_deployment")
@@ -293,8 +286,6 @@ class Deploy:
         if not application:
             application = self.app_name()
         group = self.conn.get_deployment_group(applicationName=application, deploymentGroupName=group_name)
-        # pprint(group)
-        #sys.exit(1)
         info = group['deploymentGroupInfo']
         style = info['deploymentConfigName']
         print " - Group: {}/{}  \t\t[{}]".format(application, group_name, style)
@@ -336,7 +327,7 @@ class Deploy:
         conn = util.deploy_conn()
         deploymentInfo = conn.get_deployment( deploymentId = deploymentId )['deploymentInfo']
         deploymentOverview=deploymentInfo['deploymentOverview']
-        # status will Created'|'Queued'|'InProgress'|'Succeeded'|'Failed'|'Stopped',
+        # status will be one of the following: 'Created'|'Queued'|'InProgress'|'Succeeded'|'Failed'|'Stopped'
         status=deploymentInfo['status']
         ret = {}
         ret['status'] = status
