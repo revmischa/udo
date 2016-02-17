@@ -106,7 +106,7 @@ def message_integrations(msg):
     message_slack(msg, title=user_and_host())
     print msg
 
-def message_slack(msg, title='Udo'):
+def message_slack(msg, title='Udo', icon=None):
     slack_cfg = default_config().new_root('slack')
     if not slack_cfg:
         return
@@ -119,6 +119,9 @@ def message_slack(msg, title='Udo'):
             'author_name': title,
         }],
     }
+    if icon:
+        payload['icon_emoji'] = icon
+
     message_slack_raw(payload)
 
 def message_slack_raw(payload):
@@ -135,8 +138,12 @@ def message_slack_raw(payload):
         payload['username'] = slack_username
     if not 'channel' in payload and slack_channel:
         payload['channel'] = slack_channel
-    if not 'icon_emoji' in payload and slack_icon_emoji:
-        payload['icon_emoji'] = slack_icon_emoji
+    if not 'icon_emoji' in payload:
+        if slack_icon_emoji:
+            payload['icon_emoji'] = slack_icon_emoji
+        else:
+            # default icon
+            payload['icon_emoji'] = ':control_knobs:'
 
     data = json.dumps(payload)
     headers = {'Content-Type': 'application/json'}
