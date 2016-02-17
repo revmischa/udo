@@ -103,21 +103,20 @@ def user_and_host():
 # also prints out msg
 def message_integrations(msg):
     debug("in util.py message_integrations")
-    message_slack("[{}]  {}".format(user_and_host(), msg))
+    message_slack(msg, title=user_and_host())
     print msg
 
-def message_slack(msg):
+def message_slack(msg, title='Udo'):
     slack_cfg = default_config().new_root('slack')
     if not slack_cfg:
         return
 
-    color = 'good'
+    color = '#aaaaaa'
     payload = {
-        'text': msg,
-        attachments => [{
-            text => msg,
-            color => color,
-            author_name => 'Udo',
+        'attachments': [{
+            'text': msg,
+            'color': color,
+            'author_name': title,
         }],
     }
     message_slack_raw(payload)
