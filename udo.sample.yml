@@ -32,7 +32,7 @@ slack:
     url: https://myapp.slack.com/services/hooks/incoming-webhook?token=Zgasdlgj0ioj30tj
     username: UdoBot
     channel: '#notdevops'
-
+    icon_emoji: ':japanese_goblin:'
 
 
 ### CLOUD-INIT

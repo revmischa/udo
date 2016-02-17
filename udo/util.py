@@ -107,21 +107,37 @@ def message_integrations(msg):
     print msg
 
 def message_slack(msg):
-    debug("in util.py message_slack")
     slack_cfg = default_config().new_root('slack')
     if not slack_cfg:
-        # not configured
         return
 
-    slack_url      = slack_cfg.get('url')
+    color = 'good'
+    payload = {
+        'text': msg,
+        attachments => [{
+            text => msg,
+            color => color,
+            author_name => 'Udo',
+        }],
+    }
+    message_slack_raw(payload)
+
+def message_slack_raw(payload):
+    slack_cfg = default_config().new_root('slack')
+    if not slack_cfg:
+        return
+
+    slack_url = slack_cfg.get('url')
     slack_username = slack_cfg.get('username')
     slack_channel  = slack_cfg.get('channel')
+    slack_icon_emoji  = slack_cfg.get('icon_emoji')
 
-    payload = {
-        'username': slack_username,
-        'text': msg,
-        'channel': slack_channel,
-    }
+    if not 'username' in payload and slack_username:
+        payload['username'] = slack_username
+    if not 'channel' in payload and slack_channel:
+        payload['channel'] = slack_channel
+    if not 'icon_emoji' in payload and slack_icon_emoji:
+        payload['icon_emoji'] = slack_icon_emoji
 
     data = json.dumps(payload)
     headers = {'Content-Type': 'application/json'}
