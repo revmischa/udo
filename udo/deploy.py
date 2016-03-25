@@ -126,7 +126,7 @@ class Deploy:
         deployment_id = deployment['deploymentId']
         debug("in deploy.py create: deploymentId: " + deployment_id)
         
-        util.message_integrations(':ship:' + msg)
+        util.message_integrations(msg, icon=':ship:')
 
         debug("in deploy.py create: deploymentId: " + deployment_id)
 
@@ -150,7 +150,7 @@ class Deploy:
                 status = self.deployment_status(deployment_id)['status']
                 if status == 'Succeeded':
                     _msg = 'Deployment of commit ' + commit_id + ' to deployment group: ' + group_name + ' successful.'
-                    util.message_integrations(_msg)
+                    util.message_integrations(_msg, icon=':ship:')
                     if _suspend_on_deploy:
                         asg_autoscaling_control('resume')
                     # define actions in post_deploy_hooks in udo.yml
@@ -182,7 +182,7 @@ class Deploy:
                     print("."),
                 elif status == 'Stopped':
                     _msg = 'deployment to deployment group' + group_name + ' is stopped'
-                    util.message_integrations(_msg)
+                    util.message_integrations(_msg, icon=':ship:')
                 else:
                     pprint("An unknown condition has occured")
                     pprint("status: " + str(status))
