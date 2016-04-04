@@ -1,13 +1,9 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-from setuptools import setup, find_packages
+from setuptools import setup
 import io
-import codecs
 import os
-import sys
-
-import udo
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -28,7 +24,7 @@ Read the README for more information: https://github.com/revmischa/udo/blob/mast
 
 setup(
     name='udo',
-    version='4.2.4',
+    version='4.2.5',
     url='http://github.com/revmischa/udo',
     license='Anyone But RMS',
     author='Mischa Spiegelmock',
