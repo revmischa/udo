@@ -1,0 +1,166 @@
+Me: and where do you stash your private rpms? do you run some rpm server dealio or s3 or what
+19:00 <        bizzy> repo in s3
+19:01 <        bizzy> repo's just an http server with magic pkg metadata
+19:01 <        bizzy> so you put all your pkgs in a dir
+19:01 <        bizzy> createrepo dir
+19:01 <        bizzy> then s3sync dir -> s3
+19:01 <        bizzy> bam
+
+18:34 <          snb> bizzy: that line in particular is how i can have 1 script that targets dev, qa, and prod environments
+18:34 <        bizzy> ya
+18:34 <          snb> cuz the autoscaling groups for each env push down that tag
+18:34 <          snb> it literally rules supreme
+18:35 <          snb> i store tags for env, servlet container, and custom app name
+18:35 <        bizzy> i think url.netloc does some soert of bucketname to url conversion
+
+18:22 <          snb> i just use the amazon linux public AMI, update everything from their repo, and then install rpm's
+18:22 <          snb> it's all scripted via cloud-init
+18:23 <          snb> bash scripts in cloud-init download our WAR files for our java apps from a private S3 bucket
+18:23 <          snb> and i just install whatever servlet container is the most recent from the repo in that script as well
+18:24 <          snb> for data tier shit i just build it out by hand
+18:24 <        bizzy> word
+18:24 <          snb> since i'm running everything in VPC i don't rly need to worry about shit terminating randomly
+18:24 <        bizzy> i have launchconfigs per instance type
+18:24 <          snb> if they have to do maintenance they'll send me a notification in advance
+18:25 <        bizzy> the userdata calls a type-specific bootstrap script from s3
+18:25 <          snb> bizzy: same
+18:25 <        bizzy> so i an update the script instead of the fkn userdata
+18:25 <          snb> i rly like the autoscaling launch configs
+18:25 <          snb> i also use autoscaling to automatically apply tags to the instances
+18:26 <          snb> that way they know which app to download
+18:26 <          snb> from s3
+18:26 <          snb> based on directory structure that matches the tags
+
+
+#!/usr/bin/env python
+
+import boto
+import sys
+import urlparse
+
+url = urlparse.urlparse(sys.argv[1])
+filename = url.path.split('/')[-1]
+
+c = boto.connect_s3()
+b = c.get_bucket(url.netloc)
+k = b.get_key(url.path)
+k.get_contents_to_filename(filename)
+
+
+=====
+
+
+#!/bin/bash
+/usr/bin/wget -O /tmp/credentials.txt http://169.254.169.254/latest/meta-data/iam/security-credentials/EC2-S3Access
+
+S3_ACCESS_KEY=$(/bin/cat /tmp/credentials.txt | /usr/bin/python -c "import json; import sys; data=json.load(sys.stdin); print data['AccessKeyId']")
+S3_SECRET_KEY=$(/bin/cat /tmp/credentials.txt | /usr/bin/python -c "import json; import sys; data=json.load(sys.stdin); print data['SecretAccessKey']")
+S3_TOKEN=$(/bin/cat /tmp/credentials.txt | /usr/bin/python -c "import json; import sys; data=json.load(sys.stdin); print data['Token']")
+
+# Set up the environment to use EC2 tools
+export JAVA_HOME=/usr/lib/jvm/jre
+export EC2_AMITOOL_HOME=/opt/aws/amitools/ec2
+export EC2_HOME=/opt/aws/apitools/ec2
+export AWS_CLOUDWATCH_HOME=/opt/aws/apitools/mon
+export AWS_IAM_HOME=/opt/aws/apitools/iam
+export AWS_AUTO_SCALING_HOME=/opt/aws/apitools/as
+export AWS_ELB_HOME=/opt/aws/apitools/elb
+export AWS_RDS_HOME=/opt/aws/apitools/rds
+
+INSTANCE_ID=$(/opt/aws/bin/ec2-metadata -i | /bin/cut -d ' ' -f2)
+ENVIRONMENT=$(/opt/aws/bin/ec2-describe-tags --region us-west-2 --filter "resource-type=instance" --filter "resource-id=$INSTANCE_ID" --filter "key=Environment" | /bin/cut -f5)
+ENVIRONMENT=$(/bin/echo $ENVIRONMENT | /usr/bin/tr '[:upper:]' '[:lower:]')
+
+# Download build-app-server.sh from S3 and copy to /tmp/ directory
+read -d '' PYTHON <<EOF
+import boto;
+from boto.s3.key import Key
+conn = boto.connect_s3()
+bucket = conn.get_bucket('gameboost-$ENVIRONMENT-cloudinit')
+key = bucket.get_key('build-app-server.sh')
+key.get_contents_to_filename('/tmp/build-app-server.sh')
+EOF
+/usr/bin/python -c "$PYTHON"
+
+# Execute server build steps
+/bin/bash /tmp/build-app-server.sh
+
+
+=====
+
+
+16:28 <     pbuckley> Cache all the things
+16:28 <     pbuckley> Consider the flow of a request thru the system. Client to api, api to db. This basic flow has at least three points of failure. HTTP responses, database queries, user content, dns queries. Take advantage of local browser caches when you can (DNSMasq, memcache, varnish, content delivery 
+                      networks, HTML5 application cache, etc)
+16:28 <     pbuckley> Consider a fall-back static object cache that enables a safe mode level of functionality in case of DB failure
+16:28 <     pbuckley> Design your system so that you pay for failure without giving the appearance of being down or unavailable
+16:28 <     pbuckley> Not all of the user experience require sync with the back-end
+16:28 <     pbuckley> Fast and flexible
+16:28 <     pbuckley> No upfront investment
+16:29 <     pbuckley> Better precise cost control over the resources you NEED
+16:29 <     pbuckley> This is not your father's datacenter
+16:29 <     pbuckley> You don't control the network, you ask nicely
+16:29 <     pbuckley> You can't buy an extra power supply
+16:29 <     pbuckley> You can't buy a diesel generator
+16:29 <     pbuckley> You can't build a crazy raid storage device (Think Hitachi USPv 5 chassis SAN, yeh nope)
+16:29 <     pbuckley> If you try to compensate in the same ways as you would in a datacenter, your costs will run out of control
+16:29 <     pbuckley> AWS can and does fail
+16:29 <     pbuckley> April 21, 2011 June 29, 2012 October 22, 2012 December 24, 2012 aws outages (software bugs, human error, thunderstorms)
+16:29 <     pbuckley> Embrace failure. Your instance will randomly fail. API's will become unavailable. Your strengths are different then in a datacenter. Your weaknesses have changed.
+16:29 <     pbuckley> Define what your availability requirements are going to be and design your solution around it.
+16:29 <     pbuckley> Consider the flow of a request thru the system. Client to api, api to db. This basic flow has at least three points of failure.
+16:29 <     pbuckley> Many small nodes versus a few larger nodes. A larger pool of small nodes that has a single node fail will take away less % of capacity then when a node from a smaller pool of large nodes fail. You will prove your horizontal scaling pattern sooner. Be consistent with your instance sizing.
+16:29 <     pbuckley> CAP Theorem lives. Choose eventual consistency and availability.
+16:29 <     pbuckley> Some gotchas with the subsystems
+16:29 <     pbuckley> S3 is awesome. Not fast, but speed remains consistent when many nodes are hitting it. Compress everything. Use lzo for hadoop
+16:29 <     pbuckley> Autoscale is beautiful, not only because of what it does, but due to the architectural constraints it places on you. Your build, deployment and configuration management needs to be consistent
+16:29 <     pbuckley> Elastic load balancers take a little while to warm up. They don't support web sockets without tcp pass through. Though otherwise a very cost efficient load balancer technology
+16:29 <     pbuckley> Global load balancing is your friend (DNS, personal plug for Dynect). Don't depend on the uptime of a single avaibility zone.
+16:29 <     pbuckley> Use identity manager roles for access. Give least privelage. Setup accounts by app and user
+16:29 <     pbuckley> Don't try to send email from an instance. Many of them have been blacklisted by RBLs. Instead use simple email service.
+16:30 <     pbuckley> Cloudformation can be cool, templating language is finicky and doesn’t support comments. Investigate use of fog (ruby) or boto (python) or open source utilities like netflix's asgard and family of tools.
+16:30 <     pbuckley> ELB -> ELB x N Too support cool things like having the ability to remove pools of machines for canary deploys
+16:30 <     pbuckley> Manage costs!
+16:30 <     pbuckley> Elastic map reduce + Spot instances or redshift is typically cheaper and requires less engineering hours then running your own hadoop
+16:30 <     pbuckley> Prices and features vary by region
+16:30 <     pbuckley> Age out files stored in S3 to glacier. They are still visible thru the S3 api.
+16:30 <     pbuckley> Investigate instance marketplace, potential to buy instances to get upfront savings without going with reserved instances.
+16:30 <     pbuckley> Reserved instances have a higher upfront cost but will eventually be cheaper if the instance capacity is used over n time.
+16:30 <     pbuckley> Maximize IOPS, use tricks like compression to reduce the amount of data that needs to be read off disk
+16:30 <     pbuckley> Use m1.xlarge or c1.xlarge or ssds and raid 0 ephemeral drives for cheaper fast IOPS
+16:30 <     pbuckley> EBS optimized, provisioned iops for more expensive but "promised" IOPS. Increases the number of failure points. EBS has a history of having performance issues. Watch out for applications that require you to scale vertically with IOPS.
+16:30 <     pbuckley> AWS is a nickle and dime economy, watch out or it will take your leg.
+16:30 <     pbuckley> Use cloudwatch to set billing alerts
+16:30 <     pbuckley> Calculate the cost of a query and optimize optimize optimize
+16:30 <     pbuckley> It is a my list of aws knowledge I have collected
+
+
+19:12 <        bizzy> how do i tell this fucking ubuntu intaller to reverse the partition order
+19:12 <        bizzy> so i dont have my / cockblocked by swap
+19:12 <        bizzy> assholes
+19:12 <          snb> ubutt-toot
+19:13 <        bizzy> these faggots and their purple anaconda screen
+19:13 <          snb> the centos anaconda screen is a pleasing blue
+19:13 <          snb> use centos, problem solved
+19:14 <        bizzy> i told them
+19:14 <        bizzy> ubuntu is shit
+19:14 <        bizzy> some asshole develo[er
+19:15 <        bizzy> said 'we HAVE to use ubutnu"
+19:15 <        bizzy> i bet hes bragging on some faggoty ubutnu forum about it
+19:15 <        bizzy> HAHA I LIED TO THE POOR IT GUYSAND NOW THEY  HAVE TO SUPPORT OUR GAY ASS OS
+19:16 <          snb> you have to use ubuntu because he makes a dpkg instead of an rpm for his shitware?
+19:17 <        bizzy> I definitely have issues with using CentOS instead of Ubuntu. From my list:
+19:17 <        bizzy> - CentOS has upstart but is too old to support setuid/setgid attributes (and thus requires workarounds for processes to run as a user other than root)
+19:17 <        bizzy> - Its upstart contains bugs that are fixed in newer versions, does not manage processes correctly (stop/start and restart leave behind zombie processes)
+19:17 <        bizzy> faggot
+19:17 <        bizzy> - Ships with python2.6, can't use python2.7 as default because of yum; we use syntax in our apps that requires 2.7+, requires manual compilation and make altinstall
+19:17 <        bizzy> - Doesn't have latest postgresql; installs to /usr/pgsql-9.2 instead of regular location
+19:17 <        bizzy> but lover
+19:17 <          snb> why use upstart instead of init.d
+19:17 <        bizzy> - Super old versions of everything else
+19:17 <        bizzy> - Third-party Chef cookbooks may lack CentOS support
+19:17 <        bizzy> i dont know
+19:17 <        bizzy> this guy is a dick lovng dumbshit
+19:17 <        bizzy> who cant even lie well
+19:17 <        bizzy> fucking upstart
+19:18 <        bizzy> fuck you
