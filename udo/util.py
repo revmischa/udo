@@ -101,9 +101,9 @@ def user_and_host():
     return "{}@{}".format(username, hostname)
 
 # also prints out msg
-def message_integrations(msg):
+def message_integrations(msg, **kwargs):
     debug("in util.py message_integrations")
-    message_slack(msg, title=user_and_host())
+    message_slack(msg, title=user_and_host(), **kwargs)
     print msg
 
 def message_slack(msg, title='Udo', icon=None):
