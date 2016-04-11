@@ -51,34 +51,34 @@ $ cluster activate dev.webapp
 # display our application launchconfig cloud-init script for the dev.webapp role
 $ udo lc cloudinit dev.webapp   
 
-# terminates all instances in the qa-webapp group via scaling policy, deletes ASgroup and LC
+# terminates all instances in the qa.webapp group via scaling policy, deletes ASgroup and LC
 $ $ udo asg deactivate qa.webapp
 Deleting... this may take a few minutes...
 . . . . . . . . . . . .
-Deleted ASgroup qa-webapp
+Deleted ASgroup qa.webapp
 Deleting launchconfig...
-Deleted LaunchConfig qa-webapp
+Deleted LaunchConfig qa.webapp
 
 # delete and recreate ASgroup, super easy brain-dead way to reprovision a cluster
 $ udo asg reload prod.worker
-Are you sure you want to tear down the prod-worker ASgroup and recreate it? (y/n) y
-Reloading ASgroup prod-worker
+Are you sure you want to tear down the prod.worker ASgroup and recreate it? (y/n) y
+Reloading ASgroup prod.worker
 Deleting... this may take a few minutes...
 . . . . . . . . . . . . 
-Deleted ASgroup prod-worker
+Deleted ASgroup prod.worker
 Deleting launchconfig...
-Deleted LaunchConfig prod-worker
-Creating LaunchConfig prod-worker
-Activated LaunchConfig prod-worker
+Deleted LaunchConfig prod.worker
+Creating LaunchConfig prod.worker
+Activated LaunchConfig prod.worker
 Using subnets subnet-cf9a87321, subnet-bfac8123
 AZs: ['us-west-2a', 'us-west-2b']
-Activated ASgroup prod-worker
+Activated ASgroup prod.worker
 
 # change asgroup desired instance capacity
 $ udo asg scale prod.worker 10
 Cannot scale: 10 is greater than max_size (7)
 Increase max_size to 10? (y/n) y
-Changed ASgroup prod-worker desired_capacity from 4 to 10
+Changed ASgroup prod.worker desired_capacity from 4 to 10
 
 # deploy with CodeDeploy
 $ udo deploy list groups
@@ -115,12 +115,12 @@ stage-webapp  i-e5584916  InService HEALTHY
 stage-webapp  i-e1581917  InService HEALTHY
 
 # bonus slack notifications (if configured)
-< UdoBot> Changed ASgroup prod-worker desired_capacity from 4 to 10
-< UdoBot> Reloading ASgroup prod-worker
-< UdoBot> Deleted ASgroup prod-worker
-< UdoBot> Deleted LaunchConfig prod-worker
-< UdoBot> Activated LaunchConfig prod-worker
-< UdoBot> Activated ASgroup prod-worker
+< UdoBot> Changed ASgroup prod.worker desired_capacity from 4 to 10
+< UdoBot> Reloading ASgroup prod.worker
+< UdoBot> Deleted ASgroup prod.worker
+< UdoBot> Deleted LaunchConfig prod.worker
+< UdoBot> Activated LaunchConfig prod.worker
+< UdoBot> Activated ASgroup prod.worker
 
 # update launchconfig for an existing autoscaling group (bonus feature not provided by AWS or boto)
 $ udo asg updatelc dev.webapp

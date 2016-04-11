@@ -1,13 +1,9 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-from setuptools import setup, find_packages
+from setuptools import setup
 import io
-import codecs
 import os
-import sys
-
-import udo
 
 here = os.path.abspath(os.path.dirname(__file__))
 

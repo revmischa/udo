@@ -180,6 +180,7 @@ class Deploy:
                     raise ValueError("deployment is Queued")
                 elif status == 'InProgress':
                     print("."),
+                    sys.stdout.flush()
                 elif status == 'Stopped':
                     _msg = 'deployment to deployment group' + group_name + ' is stopped'
                     util.message_integrations(_msg, icon=':ship:')

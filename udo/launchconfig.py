@@ -199,7 +199,7 @@ class LaunchConfig:
     def activate(self):
         debug("in launchconfig.py activate")
         conn = util.as_conn()
-        name = self.name()
+        name = self.get_lc_server_name()
 
         if self.exists():
             debug("in launchconfig.py self.exists()")
