@@ -199,10 +199,11 @@ class LaunchConfig:
     def activate(self):
         debug("in launchconfig.py activate")
         conn = util.as_conn()
-        name = self.get_lc_server_name()
+        name = None
 
         if self.exists():
             debug("in launchconfig.py self.exists()")
+            name = self.get_lc_server_name()
             # NOTE: I don't think program logic ever gets here
             if not util.confirm("LaunchConfig {} already exists, overwrite?".format(name)):
                 pprint("in launchconfig.py activate: Confirmed overwriting LaunchConfig")
@@ -210,6 +211,8 @@ class LaunchConfig:
             # delete existing
             pprint("in launchconfig.py activate: deleting LaunchConfig")
             conn.delete_launch_configuration(LaunchConfigurationName=name)
+        else:
+            name = self.name()
 
         # get configuration for this LC
         cfg = self.role_config
