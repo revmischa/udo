@@ -148,4 +148,12 @@ def message_slack_raw(payload):
     data = json.dumps(payload)
     headers = {'Content-Type': 'application/json'}
     request = urllib2.Request(slack_url, data, headers=headers)
-    return urllib2.urlopen(request).read()
+    rv = None
+    try:
+        rv = urllib2.urlopen(request).read()
+    except urllib2.HTTPError as err:
+        contents = err.read()
+        print("Failed to deliver Slack message:")
+        print(err)
+        print(contents)
+    return rv
