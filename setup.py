@@ -24,22 +24,14 @@ Read the README for more information: https://github.com/revmischa/udo/blob/mast
 
 setup(
     name='udo',
-    version='4.2.7',
+    version='4.2.8',
     url='http://github.com/revmischa/udo',
     license='Anyone But RMS',
     author='Mischa Spiegelmock',
     tests_require=['pytest'],
     install_requires=[
         'boto3==1.2.3',
-        'botocore==1.3.23',
-        'docutils==0.12',
-        'futures==3.0.4',
-        'jmespath==0.9.0',
-        'python-dateutil==2.4.2',
         'PyYAML==3.11',
-        'six==1.10.0',
-        'termcolor==1.1.0',
-        'wheel==0.27.0',
     ],
     author_email='revmischa@cpan.org',
     description='Automate AWS Orchestration and Deployments',
