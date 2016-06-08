@@ -60,9 +60,9 @@ class Udo:
             print " updatelc (cluster).(role) - generates a new launchconfig version"
             print " scale (cluster).(role) - view current scaling settings"
             print " scale (cluster).(role) (desired) - set desired number of instances"
-            print " policies (cluster).(role) - view current autoscaling policies"
-            print " suspend (cluster).(role) - suspend autoscaling for group"
-            print " resume (cluster.(role) - resume autoscaling for group"
+            # print " policies (cluster).(role) - view current autoscaling policies"
+            # print " suspend (cluster).(role) - suspend autoscaling for group"
+            # print " resume (cluster.(role) - resume autoscaling for group"
             return
         # TODO: hook up 'list'
 
