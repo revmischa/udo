@@ -112,11 +112,10 @@ class AutoscaleGroup:
         response = client.update_auto_scaling_group( AutoScalingGroupName = asg_name, LaunchConfigurationName = lcname )
 
         # delete old
-        conn = util.as_conn()
         if oldname is not lcname:
             # TODO: waiter
             debug("deleting Launchconfig " + oldname)
-            conn.delete_launch_configuration(LaunchConfigurationName = oldname)
+            client.delete_launch_configuration(LaunchConfigurationName = oldname)
 
     def get_asgroup(self):
         debug("In asgroup.py get_asgroup")
@@ -143,26 +142,29 @@ class AutoscaleGroup:
     def scale(self, desired):
         debug("In asgroup.y scale")
         asgroup = self.get_asgroup()
+        client = util.as_conn()
+        asg_name = self.name()
 
         if desired < asgroup['MinSize']:
-            print "Cannot scale: {} is lower than min_size ({})".format(desired, asgroup['MinSize'])
+            print "Cannot scale: {} is lower than MinSize ({})".format(desired, asgroup['MinSize'])
             return
         if desired > asgroup['MaxSize']:
-            print "Cannot scale: {} is greater than max_size ({})".format(desired, asgroup['MaxSize'])
-            if not util.confirm("Increase max_size to {}?".format(desired)):
+            print "Cannot scale: {} is greater than MaxSize ({})".format(desired, asgroup['MaxSize'])
+            if not util.confirm("Increase MaxSize to {}?".format(desired)):
                 return
             asgroup['MaxSize'] = desired
+            client.update_auto_scaling_group( AutoScalingGroupName = asg_name, MaxSize = desired )
         current = asgroup['DesiredCapacity']
 
         # Set DesiredCapacity
-        response = util.as_conn().set_desired_capacity( AutoScalingGroupName = self.name(), DesiredCapacity = desired )
+        response = client.set_desired_capacity( AutoScalingGroupName = asg_name, DesiredCapacity = desired )
 
         # Check if DesiredCapacity was changed
         debug("in asgroup.py scale: running 'asgroup = self.get_asgroup()'")
         asgroup = self.get_asgroup()
         new = asgroup['DesiredCapacity']
         if (new != current):
-            msg = "Changed ASgroup {} desired_capacity from {} to {}".format(self.name(), current, new)
+            msg = "Changed ASgroup {} desired_capacity from {} to {}".format(asg_name, current, new)
             util.message_integrations(msg)
 
     # kill off asg and recreate it
