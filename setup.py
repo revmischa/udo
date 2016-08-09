@@ -29,10 +29,6 @@ setup(
     license='Anyone But RMS',
     author='Mischa Spiegelmock',
     tests_require=['pytest'],
-    install_requires=[
-        'boto3==1.2.3',
-        'PyYAML==3.11',
-    ],
     author_email='revmischa@cpan.org',
     description='Automate AWS Orchestration and Deployments',
     long_description=long_description,
