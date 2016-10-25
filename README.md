@@ -139,7 +139,7 @@ $ udo asg updatelc dev.webapp
 Udo is a small collection of useful tools for managing clusters in AWS. It uses the python [boto](http://docs.pythonboto.org/en/latest/) library to communicate with the AWS APIs to automate orchestration of clusters and instances, making full use of VPCs and AutoScaling Groups.  
 Udo allows you to define your entire operational structure in a straightforward configuration file, and then use the Udo command-line tool to bring up and manage clusters and groups of instances. It takes the tedious work out of creating nearly identical clusters by hand, and automates actions like creating and managing LaunchConfigurations and AutoScaling Groups, parallelizing SSH commands by ASgroup (orchestration without the need for any running services or keeping track of instances), and performing graceful upgrades of instances in an autoscale group without downtime.
 Conceptually, all instances in a cluster should be identical and operations should be performed on clusters, not instances. There is a hierarchy of configuration values that should be applied at different levels of clusters and sub-clusters, and the [configuration schema](config.sample.yml) takes that into account.  
-Udo can be used to automate deployments with [AWS CodeDeploy](http://docs.aws.amazon.com/codedeploy/latest/userguide/welcome.html) and you don't even need to access your instances ever. Deploys commits straight from GitHub (S3 support coming soon as well).  
+Udo can be used to automate deployments with [AWS CodeDeploy](http://docs.aws.amazon.com/codedeploy/latest/userguide/welcome.html) and you don't even need to access your instances ever. Deploys commits straight from GitHub. [Deployment from S3 is a simple modification](http://docs.aws.amazon.com/codedeploy/latest/userguide/how-to-push-revision.html).
 
 
 ### What do _you_ do?
@@ -150,8 +150,9 @@ You *could* do all of this work yourself, or you could just use Udo.
 ### What _should_ you do?
 EC2 is not a datacenter in ~the cloud~. If you're using it like a traditional managed hosting company, you are probably doing things wrong. You should take advantage of the specialized infrastucture and APIs provided by AWS, like AutoScaling Groups and `boto`.  
 If you're making an AMI per role, you may be doing things wrong. You should be able to automatically deploy your entire application onto a stock Amazon Linux AMI, though making one with some of your app already installed to save time isn't a bad idea.  
-If you're using Puppet, Chef, or care about hostnames/IPs, you're almost definitely doing things wrong. You aren't maintaining machines that are going to necessairly exist for any length of time, and you should be able to kill off instances at will as well as spawn and fully provision a new instance from scratch without even thinking about it. There's no reason you should need to keep track of an individual instance.  
-Configuration management tools impose extra overhead and complexity for the ability to diff between the state of a running machine and the desired state. This capability is unneeded when you can simply trash the instance and bring a new one up with imperative commands. 
+If you're using Ansible, Puppet, Chef, or care about keeping track of hostnames/IPs, you're almost definitely doing things wrong. You aren't maintaining machines that are going to necessairly exist for any length of time, and you should be able to kill off instances at will as well as spawn and fully provision a new instance from scratch without even thinking about it. There's no reason you should need to keep track of an individual instance.  
+Configuration management tools impose extra overhead and complexity for the ability to diff between the state of a running machine and the desired state. This capability is unneeded when you can simply trash the instance and bring a new one up with imperative commands.  
+Many people are continuing to do extra work by invoking these tools due to momentum. Please stop and ask yourself if they are necessary, and if so, what could you be doing to make your instances not require configuration management in the first place, such as CodeDeploy, cloud-init and AutoScaling groups. 
 
 ### Does this work?
 We've been using this in production for a decent length of time with minimal trouble. It's been very handy for managing groups of instances without the need for any special services running on them. We mostly use it for turning QA clusters off when not in use, cleanly reprovisioning instances, and updating launchconfigurations in place on production (something you cannot currently do with the AWS GUI or CLI). 
@@ -180,7 +181,9 @@ Several Amazon engineers have reviewed Udo and given it their seal of approval. 
 ### Known Issues
 #### CodeDeploy:
 * When daemonizing in a CodeDeploy script hook, you must redirect stdout and stderr: `script.sh 1>/dev/null 2>&1 &` instead of `script.sh &` (For any jobs running in background)
+* If the user linking a private repo that you deploy from loses permission, your deployments will fail with 404 errors. You need to re-link GitHub OAuth access via a secret button that can only be found if you re-create the deployment group. This is not really documented.
 * For the current autoscaling behavior, When a new autoscaling instance spins up we deploy the last successfuly deployed revision for that deployment group to it and only put the instance in service if that deployment succeeded.For the Github case, it is possible to deploy a known commit to a deployment group however, we have yet to impliment branch tracking, so simply saying deploy HEAD is not supported at this time. We have filed a feature request with Amazon to support this.
+* UPDATE: [Waiters are added](https://github.com/boto/botocore/pull/977) - @danhimalplanet says he is working on Udo support for them
 
 ### Waiters
 * boto3 introduced "waiters" which allow you to wait for certain actions to complete. Unfortunately no waiters currently exist when performing AutoScaling or CodeDeploy actions. We have a feature request filed to support this.
