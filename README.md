@@ -183,7 +183,7 @@ Several Amazon engineers have reviewed Udo and given it their seal of approval. 
 * When daemonizing in a CodeDeploy script hook, you must redirect stdout and stderr: `script.sh 1>/dev/null 2>&1 &` instead of `script.sh &` (For any jobs running in background)
 * If the user linking a private repo that you deploy from loses permission, your deployments will fail with 404 errors. You need to re-link GitHub OAuth access via a secret button that can only be found if you re-create the deployment group. This is not really documented.
 * For the current autoscaling behavior, When a new autoscaling instance spins up we deploy the last successfuly deployed revision for that deployment group to it and only put the instance in service if that deployment succeeded.For the GitHub case, it is possible to deploy a known commit to a deployment group however, we have yet to impliment branch tracking, so simply saying deploy HEAD is not supported at this time. We have filed a feature request with Amazon to support this.
-* UPDATE: [Waiters are added](https://github.com/boto/botocore/pull/977) - [@danhimalplanet] says he is working on Udo support for them
+* UPDATE: [Waiters are added](https://github.com/boto/botocore/pull/977) - @danhimalplanet says he is working on Udo support for them
 
 ### Waiters
 * boto3 introduced "waiters" which allow you to wait for certain actions to complete. Unfortunately no waiters currently exist when performing AutoScaling or CodeDeploy actions. We have a feature request filed to support this.

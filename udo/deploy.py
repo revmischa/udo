@@ -1,23 +1,20 @@
-"""
+"""CodeDeploy utility interface for creating and viewing progress of deployments.
 create_deployment(application_name, deployment_group_name=None, 
 revision=None, deployment_config_name=None, description=None, 
 ignore_application_stop_failures=None)
 """
 
-import boto3
 import subprocess
 import re
 import sys
 
-from datetime import datetime
-from dateutil.parser import parse
 from pprint import pprint
 
 import asgroup
 import config
 import util
+import botocore
 
-from time import sleep
 from util import debug
 
 _suspend_on_deploy = False
@@ -81,11 +78,7 @@ class Deploy:
             print "deployment github repository not specified in deployment configuration"
             return
         repo_name = source['repo']
-
         application_name = cfg['application']
-
-        msg = "Deploying commit {} to deployment group: {}".format(self.commit_id_display(commit_id), group_name)
-
         deployment_asg_info = self.conn.get_deployment_group(applicationName=application_name,
                     deploymentGroupName=group_name)['deploymentGroupInfo']['autoScalingGroups']
 
@@ -123,81 +116,58 @@ class Deploy:
             # prob won't reach here, will throw error instead
             print "Deployment failed"
             return
-        deployment_id = deployment['deploymentId']
-        debug("in deploy.py create: deploymentId: " + deployment_id)
-        
+
+        msg = "Deploying commit {} to deployment group: {}".format(self.commit_id_display(commit_id), group_name)
         util.message_integrations(msg, icon=':ship:')
 
-        debug("in deploy.py create: deploymentId: " + deployment_id)
-
-        pprint("Waiting for deployment...")
+        # now we wait...
+        # CodeDeploy waiters courtesy of https://github.com/boto/boto3/issues/708
+        waiter = self.conn.get_waiter('deployment_successful')
+        deployment_id = deployment['deploymentId']
+        print("Waiting for deployment completion...")
         try:
-            sleep(5)
-        except KeyboardInterrupt:
+            deploy_err = waiter.wait(deploymentId=deployment_id)
+            if deploy_err:
+                print("Deploy failed:", deploy_err)
+                return
+        except botocore.exceptions.WaiterError as we:
+            print("Failure:", we)
             return
-
-        interval = 5
-        tries = 60
-        # deployment_status[status] will be:
-        # 'Created'|'Queued'|'InProgress'|'Succeeded'|'Failed'|'Stopped',
-        #
-        # what you see in AWS dashboard is usually what the current state actually is.
-        # info you grab from the API appears to be slightly delayed
-        #
-        for x in range(0, tries):
-            try:
-            # should get status here, then check for it, instead of in the loop
-                status = self.deployment_status(deployment_id)['status']
-                if status == 'Succeeded':
-                    _msg = 'Deployment of commit ' + commit_id + ' to deployment group: ' + group_name + ' successful.'
-                    util.message_integrations(_msg, icon=':ship:')
-                    if _suspend_on_deploy:
-                        asg_autoscaling_control('resume')
-                    # define actions in post_deploy_hooks in udo.yml
-                    post_deploy_hooks = self.get_post_deploy_hooks(application_name, group_name)
-                    if post_deploy_hooks:
-                        for post_deploy_hook in post_deploy_hooks:
-                            print("running: " + post_deploy_hook)
-                            try:
-                                command = subprocess.Popen(post_deploy_hook.split())
-                            except OSError as e:
-                                print e
-                                pass
-                            except ValueError as e:
-                                print e    
-                                pass
-                            except:
-                                pass
-                    break
-                elif status == 'Failed':
-                    if _suspend_on_deploy:
-                        asg_autoscaling_control('resume')
-                    _msg = "FAILURE to deploy commit ' + commid_id + ' to deployment group: ' + group_name"
-                    break
-                elif status == 'Created':
-                    raise ValueError("deployment has been created... nothing has happened yet")
-                elif status == 'Queued':
-                    raise ValueError("deployment is Queued")
-                elif status == 'InProgress':
-                    print("."),
-                    sys.stdout.flush()
-                elif status == 'Stopped':
-                    _msg = 'deployment to deployment group' + group_name + ' is stopped'
-                    util.message_integrations(_msg, icon=':ship:')
-                else:
-                    pprint("An unknown condition has occured")
-                    pprint("status: " + str(status))
-                    sys.exit(1)
-            except KeyboardInterrupt:
-                break
-            except ValueError as e:
-                pprint(e)
-                pass
-
-            try:
-                sleep(interval)
-            except KeyboardInterrupt:
-                break
+        status = self.deployment_status(deployment_id)['status']
+        print("Deploy status: {}".format(status))
+        if status == 'Succeeded':
+            _msg = 'Deployment of commit ' + commit_id + ' to deployment group: ' + group_name + ' successful.'
+            util.message_integrations(_msg, icon=':ship:')
+            if _suspend_on_deploy:
+                asg_autoscaling_control('resume')
+            # define actions in post_deploy_hooks in udo.yml
+            post_deploy_hooks = self.get_post_deploy_hooks(application_name, group_name)
+            if post_deploy_hooks:
+                for post_deploy_hook in post_deploy_hooks:
+                    print("Running post_deploy_hook: " + post_deploy_hook)
+                    try:
+                        command = subprocess.Popen(post_deploy_hook.split())
+                    except Exception as e:
+                        print e
+                        pass
+        elif status == 'Failed':
+            if _suspend_on_deploy:
+                asg_autoscaling_control('resume')
+            _msg = "FAILURE to deploy commit ' + commid_id + ' to deployment group: ' + group_name"
+        elif status == 'Created':
+            raise ValueError("deployment has been created... nothing has happened yet")
+        elif status == 'Queued':
+            raise ValueError("deployment is Queued")
+        elif status == 'InProgress':
+            print("."),
+            sys.stdout.flush()
+        elif status == 'Stopped':
+            _msg = 'deployment to deployment group' + group_name + ' is stopped'
+            util.message_integrations(_msg, icon=':ship:')
+        else:
+            pprint("An unknown condition has occured")
+            pprint("status: " + str(status))
+            sys.exit(1)
 
     def list_deployments(self, dep_id=None, group=None):
         debug("in deploy.py list_deployments")
