@@ -148,7 +148,7 @@ If you wish to set this up in AWS, you should script creating environments, prov
 You *could* do all of this work yourself, or you could just use Udo.
 
 ### What _should_ you do?
-EC2 is not a datacenter in ~the cloud~. If you're using it like a traditional managed hosting company, you are probably doing things wrong. You should take advantage of the specialized infrastucture and APIs provided by AWS, like AutoScaling Groups and `boto`.  
+EC2 is not a datacenter in the cloud. If you're using it like a traditional managed hosting company, you are probably doing things wrong. You should take advantage of the specialized infrastucture and APIs provided by AWS, like AutoScaling Groups and `boto`.  
 If you're making an AMI per role, you may be doing things wrong. You should be able to automatically deploy your entire application onto a stock Amazon Linux AMI, though making one with some of your app already installed to save time isn't a bad idea.  
 If you're using Ansible, Puppet, Chef, or care about keeping track of hostnames/IPs, you're almost definitely doing things wrong. You aren't maintaining machines that are going to necessairly exist for any length of time, and you should be able to kill off instances at will as well as spawn and fully provision a new instance from scratch without even thinking about it. There's no reason you should need to keep track of an individual instance.  
 Configuration management tools impose extra overhead and complexity for the ability to diff between the state of a running machine and the desired state. This capability is unneeded when you can simply trash the instance and bring a new one up with imperative commands.  
