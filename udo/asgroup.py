@@ -4,13 +4,13 @@ import time
 from pprint import pprint
 from termcolor import colored
 
-import config
-import util
-import launchconfig
-import cluster
+from . import config
+from . import util
+from . import launchconfig
+from . import cluster
 
 from time import sleep
-from util import debug
+from .util import debug
 
 _cfg = config.Config()
 
@@ -41,7 +41,7 @@ class AutoscaleGroup:
         debug("In asgroup.py find_vpc_subnet_by_cidr")
         vpc = cluster.get_vpc_by_name(self.cluster_name)
         if not vpc:
-            print "Failed to find VPC {}".format(self.cluster_name)
+            print("Failed to find VPC {}".format(self.cluster_name))
             return None
         # look for subnet that matches
         vpc_iterator = cluster.vpc_conn()
@@ -84,12 +84,12 @@ class AutoscaleGroup:
             util.retry(lambda: self.lc(), 60)
             lc = self.lc()
         if not lc:
-            print "Timed out waiting to create LaunchConfiguration"
+            print("Timed out waiting to create LaunchConfiguration")
             return false
         if lc.exists():
-            print "Using LaunchConfig {}".format(lc.get_lc_server_name())
+            print("Using LaunchConfig {}".format(lc.get_lc_server_name()))
             return True
-        print "Creating LaunchConfig {}".format(lc.name())
+        print("Creating LaunchConfig {}".format(lc.name()))
         return lc.activate()
 
     # we can't modify a launchconfig in place, we have to create
@@ -136,7 +136,7 @@ class AutoscaleGroup:
     def get_scale_size(self):
         debug("In asgroup.py get_scale_size")
         asgroup = self.get_asgroup()
-        print "Desired: {}\nMin:{}\nMax:{}".format(asgroup['DesiredCapacity'], asgroup['MinSize'], asgroup['MaxSize'])
+        print("Desired: {}\nMin:{}\nMax:{}".format(asgroup['DesiredCapacity'], asgroup['MinSize'], asgroup['MaxSize']))
 
     # set desired_size
     def scale(self, desired):
@@ -146,10 +146,10 @@ class AutoscaleGroup:
         asg_name = self.name()
 
         if desired < asgroup['MinSize']:
-            print "Cannot scale: {} is lower than MinSize ({})".format(desired, asgroup['MinSize'])
+            print("Cannot scale: {} is lower than MinSize ({})".format(desired, asgroup['MinSize']))
             return
         if desired > asgroup['MaxSize']:
-            print "Cannot scale: {} is greater than MaxSize ({})".format(desired, asgroup['MaxSize'])
+            print("Cannot scale: {} is greater than MaxSize ({})".format(desired, asgroup['MaxSize']))
             if not util.confirm("Increase MaxSize to {}?".format(desired)):
                 return
             asgroup['MaxSize'] = desired
@@ -206,7 +206,7 @@ class AutoscaleGroup:
             num_instances = len(asg_info['AutoScalingGroups'][0]['Instances'])
             if self.get_num_instances() == 0:
                 pprint("There are no instances in asg: " + asg_name)
-                print("Deleting asg: " + asg_name)
+                print(("Deleting asg: " + asg_name))
                 response = ag.delete_auto_scaling_group( AutoScalingGroupName=asg_name )
                 util.message_integrations("Deleted ASgroup {}".format(asg_name))
             else:
@@ -255,9 +255,9 @@ class AutoscaleGroup:
 
         subnet_cidrs = cfg.get('subnets_cidr')
         if not subnet_cidrs or not len(subnet_cidrs) or None in subnet_cidrs:
-            print "Valid subnets_cidr are required for {}/{}".format(self.cluster_name, self.role_name)
+            print("Valid subnets_cidr are required for {}/{}".format(self.cluster_name, self.role_name))
             return False
-        print("Using subnets " + str(subnet_cidrs))
+        print(("Using subnets " + str(subnet_cidrs)))
 
         subnet_ids = self.get_subnet_ids_by_cidrs(subnet_cidrs)
         azs=cfg.get('availability_zones')
@@ -266,7 +266,7 @@ class AutoscaleGroup:
         # If AvailabilityZones is defined, add it to the args we will pass to conn.create_auto_scaling_group()
         if azs:
             cfg_args['AvailabilityZones'] = azs
-            print "AZs: {}".format(azs)
+            print("AZs: {}".format(azs))
         else:
             pprint("No availability_zones set")
 
@@ -303,7 +303,7 @@ class AutoscaleGroup:
         tags['Name'] = self.name()
 
         # apply tags        
-        tag_set = [self.ag_tag(name, k,v) for (k,v) in tags.iteritems()]
+        tag_set = [self.ag_tag(name, k,v) for (k,v) in tags.items()]
         debug("Applying tags to asg")
         conn.create_or_update_tags(Tags=tag_set)
 
@@ -355,7 +355,7 @@ class AutoscaleGroup:
                 state = instance['LifecycleState']
                 group = name
                 iid = instance['InstanceId']
-                print("{}\t{}\t{}\t{}".format(group, iid, state, status))
+                print(("{}\t{}\t{}\t{}".format(group, iid, state, status)))
 
     def ip_addresses(self):
         debug("In asgroup.py ip_addresses")
@@ -369,13 +369,13 @@ class AutoscaleGroup:
     def policies(self):
 
         def _status(msg1, msg2, color='white'):
-            print(colored(msg1, 'green') + ": " + colored(msg2, color))
+            print((colored(msg1, 'green') + ": " + colored(msg2, color)))
 
         debug("In asgroup.py policies")
         name = self.name()
         asg_policies = self.conn.describe_policies( AutoScalingGroupName = name )['ScalingPolicies']
         if not asg_policies:
-            print("no Scaling Policies defined for %s" % name) 
+            print(("no Scaling Policies defined for %s" % name)) 
             return
 
         if self.suspend_status():
@@ -418,10 +418,10 @@ class AutoscaleGroup:
         name = self.name()
         asg_policies = self.conn.describe_policies( AutoScalingGroupName = name )['ScalingPolicies']
         if not asg_policies: # if we cant find the status of any ScalingPolicies, there are no policies
-            print("ASG %s has no autoscaling processes to suspend" % name)
+            print(("ASG %s has no autoscaling processes to suspend" % name))
             return
         if self.suspend_status():
-            print("ASG %s is already suspended" % name)
+            print(("ASG %s is already suspended" % name))
             return
         else:
             group = []
@@ -439,12 +439,12 @@ class AutoscaleGroup:
         name = self.name()
         asg_policies = self.conn.describe_policies( AutoScalingGroupName = name )['ScalingPolicies']
         if not asg_policies:
-            print("ASG %s has no autoscaling processes to resume" % name)
+            print(("ASG %s has no autoscaling processes to resume" % name))
             return
         if self.suspend_status():
             self.conn.resume_processes( AutoScalingGroupName = name)
         else:
-            print("ASG %s has no suspended processes to resume" % name)
+            print(("ASG %s has no suspended processes to resume" % name))
             return
         if not self.suspend_status():
             util.message_integrations("Resumed autoscaling processes for {}".format(name))

@@ -10,12 +10,12 @@ import sys
 
 from pprint import pprint
 
-import asgroup
-import config
-import util
+from . import asgroup
+from . import config
+from . import util
 import botocore
 
-from util import debug
+from .util import debug
 
 _suspend_on_deploy = False
 
@@ -45,8 +45,8 @@ class Deploy:
         debug("in deploy.py app_name")
         application = self.config().get('application')
         if not application:
-            print "Deployment application not specified or configured"
-            print "Valid applications are:"
+            print("Deployment application not specified or configured")
+            print("Valid applications are:")
             self.list_applications()
             return
         return application
@@ -61,7 +61,7 @@ class Deploy:
         cfg = self.config()
 
         if not 'application' in cfg:
-            print "deployment application not specified in deployment configuration"
+            print("deployment application not specified in deployment configuration")
             self.list_applications()
             return
 
@@ -71,11 +71,11 @@ class Deploy:
         source = None
         rev_type = 'github'
         if not 'github' in cfg:
-            print "github info not specified in deployment configuration"
+            print("github info not specified in deployment configuration")
             return
         source = cfg['github']
         if not 'repo' in source:
-            print "deployment github repository not specified in deployment configuration"
+            print("deployment github repository not specified in deployment configuration")
             return
         repo_name = source['repo']
         application_name = cfg['application']
@@ -114,7 +114,7 @@ class Deploy:
             )
         if not deployment:
             # prob won't reach here, will throw error instead
-            print "Deployment failed"
+            print("Deployment failed")
             return
 
         msg = "Deploying commit {} to deployment group: {}".format(self.commit_id_display(commit_id), group_name)
@@ -128,13 +128,13 @@ class Deploy:
         try:
             deploy_err = waiter.wait(deploymentId=deployment_id)
             if deploy_err:
-                print("Deploy failed:", deploy_err)
+                print(("Deploy failed:", deploy_err))
                 return
         except botocore.exceptions.WaiterError as we:
-            print("Failure:", we)
+            print(("Failure:", we))
             return
         status = self.deployment_status(deployment_id)['status']
-        print("Deploy status: {}".format(status))
+        print(("Deploy status: {}".format(status)))
         if status == 'Succeeded':
             _msg = 'Deployment of commit ' + commit_id + ' to deployment group: ' + group_name + ' successful.'
             util.message_integrations(_msg, icon=':ship:')
@@ -144,11 +144,11 @@ class Deploy:
             post_deploy_hooks = self.get_post_deploy_hooks(application_name, group_name)
             if post_deploy_hooks:
                 for post_deploy_hook in post_deploy_hooks:
-                    print("Running post_deploy_hook: " + post_deploy_hook)
+                    print(("Running post_deploy_hook: " + post_deploy_hook))
                     try:
                         command = subprocess.Popen(post_deploy_hook.split())
                     except Exception as e:
-                        print e
+                        print(e)
                         pass
         elif status == 'Failed':
             if _suspend_on_deploy:
@@ -159,7 +159,7 @@ class Deploy:
         elif status == 'Queued':
             raise ValueError("deployment is Queued")
         elif status == 'InProgress':
-            print("."),
+            print(("."), end=' ')
             sys.stdout.flush()
         elif status == 'Stopped':
             _msg = 'deployment to deployment group' + group_name + ' is stopped'
@@ -204,7 +204,7 @@ class Deploy:
         debug("in deploy.py stop_deployment")
         last_dep_id = self.get_last_deployment(deployment_group_name=deployment_group_name)
         self.conn.stop_deployment(deploymentId=last_dep_id)
-        print "Stopped {}".format(last_dep_id)
+        print("Stopped {}".format(last_dep_id))
         self.print_deployment(last_dep_id)
 
     def get_last_deployment(self, deployment_group_name=None):
@@ -242,13 +242,13 @@ class Deploy:
 
         if 'gitHubLocation' in rev_info:
             commit_id = self.commit_id_display(rev_info['gitHubLocation']['commitId'])
-        print """ - {}/{} [{}]
+        print(""" - {}/{} [{}]
      Created: {}
      Status: {}
      Message: {}
      Commit: {}
 """.format(app_name, group_name, dep_id, create_time_display, status,
-        msg, commit_id)
+        msg, commit_id))
 
     def list_applications(self):
         debug("in deploy.py list_applications")
@@ -256,7 +256,7 @@ class Deploy:
         # TODO: fetch more apps via next_token if available
         app_names = apps['applications']
         for name in app_names:
-            print " - Application: {}".format(name)
+            print(" - Application: {}".format(name))
 
     def list_deployment_group_info(self, application, group_name):
         if not application:
@@ -264,17 +264,17 @@ class Deploy:
         group = self.conn.get_deployment_group(applicationName=application, deploymentGroupName=group_name)
         info = group['deploymentGroupInfo']
         style = info['deploymentConfigName']
-        print " - Group: {}/{}  \t\t[{}]".format(application, group_name, style)
+        print(" - Group: {}/{}  \t\t[{}]".format(application, group_name, style))
         # print target revision info
         if 'targetRevision' in info:
             target_rev = info['targetRevision']
             rev_type = target_rev['revisionType']
             if rev_type and rev_type == 'GitHub':
                 github_loc = target_rev['gitHubLocation']
-                print "      Repository: {}".format(github_loc['repository'])
+                print("      Repository: {}".format(github_loc['repository']))
                 if 'commitId' in github_loc:
-                    print "      Last commit ID: {}".format(github_loc['commitId'])
-        print ""
+                    print("      Last commit ID: {}".format(github_loc['commitId']))
+        print("")
 
     def list_groups(self, application=None):
         debug("in deploy.py list_groups")
@@ -296,7 +296,7 @@ class Deploy:
         # TODO: fetch more cfgs via next_token if available
         cfg_names = cfgs['deploymentConfigsList']
         for name in cfg_names:
-            print " - Configuration: {}".format(name)
+            print(" - Configuration: {}".format(name))
 
     def deployment_status(self, deploymentId):
         debug("in deploy.py deployment_status")
@@ -322,7 +322,7 @@ class Deploy:
             role = asg_name[len(cluster) + 1:]
 
             role_info = _cfg.get('clusters', cluster)['roles'][role]
-            if 'post_deploy_hook' in role_info.keys():
+            if 'post_deploy_hook' in list(role_info.keys()):
                 return(role_info['post_deploy_hook'])
         return None
 
@@ -332,9 +332,9 @@ class Deploy:
         deploymentGroups = self.conn.list_deployment_groups(applicationName=application)['deploymentGroups']
         deploymentGroup_asg_info = {}
         for deploymentGroup in deploymentGroups:
-            print('deploymentGroup: ' + deploymentGroup)
+            print(('deploymentGroup: ' + deploymentGroup))
             post_deploy_hooks = self.get_post_deploy_hooks(application, deploymentGroup)
             if post_deploy_hooks:
-                print(str(post_deploy_hooks))
+                print((str(post_deploy_hooks)))
             else:
                 print("No post deploy hooks defined.")

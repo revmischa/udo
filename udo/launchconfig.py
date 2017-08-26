@@ -5,12 +5,12 @@ import sys
 from pprint import pprint
 from string import Template
 
-import cluster
-import config
-import util
+from . import cluster
+from . import config
+from . import util
 
 from time import sleep
-from util import debug
+from .util import debug
 
 _cfg = config.Config()
 
@@ -141,7 +141,7 @@ class LaunchConfig:
         debug("in launchconfig.py update")
         if not self.exists():
             # easy, just create it
-            print "not exists"
+            print("not exists")
             self.activate()
             return self
         # generate a name for the new lc version
@@ -169,7 +169,7 @@ class LaunchConfig:
         lcs={}
         for lc in _lcs:
             lcs[lc['LaunchConfigurationName']]=lc
-        for key, value in lcs.iteritems():
+        for key, value in lcs.items():
             if key.startswith(self.name()):
                 return value
         # if we didnt find a LaunchConfig above by the time we get to here, return None
@@ -184,7 +184,7 @@ class LaunchConfig:
         if not self.exists():
             return
         lcname = self.get_lc_server_name()
-        print "Deleting launchconfig {}...".format(lcname)
+        print("Deleting launchconfig {}...".format(lcname))
         client = util.as_conn()
         response = client.delete_launch_configuration( LaunchConfigurationName = lcname )
         sleep(5) # give aws a chance to delete the launchconfig
