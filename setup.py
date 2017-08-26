@@ -24,12 +24,12 @@ Read the README for more information: https://github.com/revmischa/udo
 
 setup(
     name='udo',
-    version='4.3.0',
+    version='5.0.0',
     url='http://github.com/revmischa/udo',
     license='Anyone But RMS',
-    author='Mischa Spiegelmock',
+    author='Mischa Spiegelmock, Daniel Holliman',
     tests_require=['pytest'],
-    author_email='revmischa@cpan.org',
+    author_email='mischa@mvstg.biz',
     description='Automate AWS Orchestration and Deployments',
     long_description=long_description,
     packages=['udo'],
