@@ -10,11 +10,12 @@ import warnings
 
 from pprint import pprint
 
-from . import asgroup
-from . import config
-from . import deploy
-from . import launchconfig
-from . import util
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from udo import asgroup
+from udo import config
+from udo import deploy
+from udo import launchconfig
+from udo import util
 
 # top-level commands go here
 class Udo:

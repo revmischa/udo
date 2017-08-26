@@ -94,6 +94,7 @@ clusters:
         roles:
             webapp:
                 instance_type: 'm3.medium'
+                spot_price: 0.018
                 scale_policy:
                     min_size: 1
                     max_size: 3

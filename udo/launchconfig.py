@@ -217,9 +217,13 @@ class LaunchConfig:
         # get configuration for this LC
         cfg = self.role_config
 
+        extra = dict()
+        spot_price = cfg.get('spot_price')
+        if spot_price:
+            extra['SpotPrice'] = str(spot_price)
         tenancy = cfg.get('tenancy')
-        if not tenancy:
-            tenancy='default'
+        if tenancy:
+            extra['PlacementTenancy'] = tenancy
 
         # NOTE: wrap the following in a try block to catch errors
         lc = conn.create_launch_configuration(
@@ -231,7 +235,7 @@ class LaunchConfig:
             KeyName = cfg.get('keypair_name'),
             UserData = self.cloud_init_script(),
             SecurityGroups = cfg.get('security_groups'),
-            PlacementTenancy = tenancy,
+            **extra,
         )
         #if not conn.create_launch_configuration(lc):
         #    print "Error creating LaunchConfig {}".format(name)

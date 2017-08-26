@@ -24,7 +24,7 @@ Read the README for more information: https://github.com/revmischa/udo
 
 setup(
     name='udo',
-    version='5.0.0',
+    version='5.0.1',
     url='http://github.com/revmischa/udo',
     license='Anyone But RMS',
     author='Mischa Spiegelmock, Daniel Holliman',

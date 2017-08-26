@@ -108,7 +108,7 @@ def message_integrations(msg, **kwargs):
 
 def message_slack(msg, title='Udo', icon=None):
     slack_cfg = default_config().new_root('slack')
-    if not slack_cfg:
+    if not slack_cfg.get():
         return
 
     color = '#aaaaaa'
@@ -126,7 +126,7 @@ def message_slack(msg, title='Udo', icon=None):
 
 def message_slack_raw(payload):
     slack_cfg = default_config().new_root('slack')
-    if not slack_cfg:
+    if not slack_cfg.get():
         return
 
     slack_url = slack_cfg.get('url')
