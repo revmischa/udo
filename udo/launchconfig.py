@@ -111,6 +111,7 @@ class LaunchConfig:
         # add extra template vars
         cloud_init_config['base_packages'] = " ".join(_cfg.get('packages')) or ''
         cloud_init_config['yum_plugin_url'] = _cfg.get('repo', 'plugin_url') or ''
+        cloud_init_config['udo_region'] = _cfg.get('region') or ''
         # from role config
         cloud_init_config['role_packages'] = " ".join(self.role_config.get('packages')) or ''
         cloud_init_config['repo_url'] = self.role_config.get('repo_url') or ''
