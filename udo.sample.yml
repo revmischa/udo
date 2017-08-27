@@ -1,4 +1,5 @@
-# Sample Udo configuration file
+# Sample Udo configuration file with all features.
+# See udo.sample.simple.yml for a more compact and basic version.
 
 # You should copy this into your application's root 
 # directory and name it udo.yml
@@ -94,6 +95,7 @@ clusters:
         roles:
             webapp:
                 instance_type: 'm3.medium'
+                spot_price: 0.018
                 scale_policy:
                     min_size: 1
                     max_size: 3

@@ -1,0 +1,41 @@
+# this is a smaller example for clarity.
+# for a complete example, see udo.sample.yml
+
+app_name: mvs
+
+region: 'eu-central-1'
+availability_zones:
+    - 'eu-central-1a'
+packages:
+    - 'strace'
+    - 'nmap-ncat'
+keypair_name: 'awsmish'
+
+cloud_init_post: |
+    #!/bin/bash
+    set -x
+    AWSCMD="/usr/local/bin/aws"
+    AWS_DEFAULT_REGION=$udo_region
+    INSTANCE_ID=$(/opt/aws/bin/ec2-metadata -i | /bin/cut -d ' ' -f2)
+    $AWSCMD ec2 attach-volume --instance-id $INSTANCE_ID --device /dev/sdg --volume-id vol-0410025113efc5b41  # myvol
+    $AWSCMD ec2 wait volume-in-use --volume-id vol-0410025113efc5b41
+    mount /dev/xvdg /mnt/myvol
+
+clusters:
+    svc:
+        description: "Services"
+        subnets_cidr: 
+            - '172.31.16.0/20'
+        iam_profile: 'mvstgSvcECSEC2Role'
+        roles:
+            # ECS host instance
+            ecs:
+                spot_price: 0.016  # get a cheap container host
+                ami: 'ami-f5cf659a'  # mvstg-svc-ecs
+                instance_type: 'm3.medium'
+                scale_policy:
+                    min_size: 1
+                    max_size: 1
+                    desired: 1
+                security_groups:
+                    - 'sg-a6eae9cd'  # ssh

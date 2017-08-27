@@ -6,13 +6,13 @@ import json
 import os
 import socket
 import sys
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import botocore
 
 from pprint import pprint
 from time import sleep
 
-import config
+from . import config
 
 # don't use for tests
 
@@ -65,10 +65,10 @@ def deploy_conn():
 # returns true/false
 def confirm(msg):
     debug("in util.py confirm")
-    yn = raw_input(msg + " (y/n) ")
+    yn = input(msg + " (y/n) ")
     if yn.lower() == 'y':
         return True
-    print "Aborted"
+    print("Aborted")
     return False
 
 # keep trying proc until timeout or no exception is thrown
@@ -86,12 +86,12 @@ def retry(proc, timeout):
         except botocore.exceptions.ClientError as e:
             if default_config().get('debug'):
                 # dump response
-                print "Error: {}, retrying...".format(e)
+                print("Error: {}, retrying...".format(e))
             else:
-                print('.'),
+                print(('.'), end=' ')
                 sys.stdout.flush()
                 sleep(5)
-    print "\n"
+    print("\n")
     return ret
 
 def user_and_host():
@@ -104,11 +104,11 @@ def user_and_host():
 def message_integrations(msg, **kwargs):
     debug("in util.py message_integrations")
     message_slack(msg, title=user_and_host(), **kwargs)
-    print msg
+    print(msg)
 
 def message_slack(msg, title='Udo', icon=None):
     slack_cfg = default_config().new_root('slack')
-    if not slack_cfg:
+    if not slack_cfg.get():
         return
 
     color = '#aaaaaa'
@@ -126,7 +126,7 @@ def message_slack(msg, title='Udo', icon=None):
 
 def message_slack_raw(payload):
     slack_cfg = default_config().new_root('slack')
-    if not slack_cfg:
+    if not slack_cfg.get():
         return
 
     slack_url = slack_cfg.get('url')
@@ -147,11 +147,11 @@ def message_slack_raw(payload):
 
     data = json.dumps(payload)
     headers = {'Content-Type': 'application/json'}
-    request = urllib2.Request(slack_url, data, headers=headers)
+    request = urllib.request.Request(slack_url, data, headers=headers)
     rv = None
     try:
-        rv = urllib2.urlopen(request).read()
-    except urllib2.HTTPError as err:
+        rv = urllib.request.urlopen(request).read()
+    except urllib.error.HTTPError as err:
         contents = err.read()
         print("Failed to deliver Slack message:")
         print(err)

@@ -10,11 +10,12 @@ import warnings
 
 from pprint import pprint
 
-import asgroup
-import config
-import deploy
-import launchconfig
-import util
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from udo import asgroup
+from udo import config
+from udo import deploy
+from udo import launchconfig
+from udo import util
 
 # top-level commands go here
 class Udo:
@@ -22,10 +23,10 @@ class Udo:
     def lc(self, *args):
         args = list(args)
         if not len(args) >= 2:
-            print "launchconfig command requires an action. Valid actions are: "
-            print " cloudinit (cluster).(role) - view cloud_init bootstrap script"
-            print " create (cluster).(role) - create launch configuration"
-            print " destroy (cluster).(role) - delete launch configuration"
+            print("launchconfig command requires an action. Valid actions are: ")
+            print(" cloudinit (cluster).(role) - view cloud_init bootstrap script")
+            print(" create (cluster).(role) - create launch configuration")
+            print(" destroy (cluster).(role) - delete launch configuration")
             return
         action = args.pop(0)
         target = args.pop(0)
@@ -39,27 +40,27 @@ class Udo:
 
         if action == 'cloudinit':
             cloudinit = lc.cloud_init_script()
-            print cloudinit
+            print(cloudinit)
         elif action == 'create':
             lc.activate()
         elif action == 'destroy':
             lc.deactivate()
         else:
-            print "Unrecognized LaunchConfig action"
+            print("Unrecognized LaunchConfig action")
 
     # autoscale
     def asg(self, *args):
         args = list(args)
         if not len(args) or not args[0]:
-            print "asgroup command requires an action. Valid actions are: "
-            print " instances (cluster).(role) - list instances in group"
-            print " randomip (cluster).(role) - get an IP address of a host in the group"
-            print " create (cluster).(role) - create an autoscale group"
-            print " destroy (cluster).(role) - delete an autoscale group and terminate all instances"
-            print " reload (cluster).(role) - destroys asgroup and launchconfig, then recreates them"
-            print " updatelc (cluster).(role) - generates a new launchconfig version"
-            print " scale (cluster).(role) - view current scaling settings"
-            print " scale (cluster).(role) (desired) - set desired number of instances"
+            print("asgroup command requires an action. Valid actions are: ")
+            print(" instances (cluster).(role) - list instances in group")
+            print(" randomip (cluster).(role) - get an IP address of a host in the group")
+            print(" create (cluster).(role) - create an autoscale group")
+            print(" destroy (cluster).(role) - delete an autoscale group and terminate all instances")
+            print(" reload (cluster).(role) - destroys asgroup and launchconfig, then recreates them")
+            print(" updatelc (cluster).(role) - generates a new launchconfig version")
+            print(" scale (cluster).(role) - view current scaling settings")
+            print(" scale (cluster).(role) (desired) - set desired number of instances")
             # print " policies (cluster).(role) - view current autoscaling policies"
             # print " suspend (cluster).(role) - suspend autoscaling for group"
             # print " resume (cluster.(role) - resume autoscaling for group"
@@ -76,7 +77,7 @@ class Udo:
         ag = asgroup.AutoscaleGroup(cluster, role)
 
         if not ag.has_valid_role():
-            print "Invalid role {} specified for cluster {}".format(role, cluster)
+            print("Invalid role {} specified for cluster {}".format(role, cluster))
             return
 
         if action == 'create':
@@ -91,7 +92,7 @@ class Udo:
             ag.print_instances()
         elif action == 'randomip':
             ips = ag.ip_addresses()
-            print(random.choice(ips))
+            print((random.choice(ips)))
         elif action == 'scale':
             # get scale arg
             if len(args):
@@ -106,27 +107,27 @@ class Udo:
         elif action == 'resume':
             ag.resume()
         else:
-            print "Unrecognized asgroup action {}".format(action)
+            print("Unrecognized asgroup action {}".format(action))
 
     # CodeDeploy
     def deploy(self, *args):
         args = list(args)
         if not len(args) or not args[0]:
-            print "deploy command requires an action. Valid actions are: "
-            print " list applications"
-            print " list groups [application]"
-            print " list deployments"
-            print " list configs"
-            print " create (group) (commit_id)"
-            print " last [group]"
-            print " status deploymentId" # only for debugging
+            print("deploy command requires an action. Valid actions are: ")
+            print(" list applications")
+            print(" list groups [application]")
+            print(" list deployments")
+            print(" list configs")
+            print(" create (group) (commit_id)")
+            print(" last [group]")
+            print(" status deploymentId") # only for debugging
             return
         action = args.pop(0)
 
         if action == 'list':
             dep = deploy.Deploy()
             if not len(args):
-                print "list what? applications, groups, deployments, post or configs?"
+                print("list what? applications, groups, deployments, post or configs?")
                 return
             what = args.pop(0)
             if what == 'applications' or what == 'apps':
@@ -144,11 +145,11 @@ class Udo:
             elif what == 'post':
                 dep.list_post_deploy_hooks()
             else:
-                print "Unknown list type: {}".format(what)
+                print("Unknown list type: {}".format(what))
         elif action == 'create':
             # require group, commit_id
             if len(args) != 2:
-                print "deploy create requires group and commit id"
+                print("deploy create requires group and commit id")
                 return
             group = args.pop(0)
             commit_id = args.pop(0)
@@ -163,7 +164,7 @@ class Udo:
         elif action == 'status':
             deploymentId = args.pop(0)
             dep = deploy.Deploy()
-            print(dep.deployment_status(deploymentId))
+            print((dep.deployment_status(deploymentId)))
         elif action == 'stop':
             dep = deploy.Deploy()
             group_name = None
@@ -177,7 +178,7 @@ class Udo:
             dep = deploy.Deploy()
             dep.create(group_name, commit_id)
         else:
-            print "Unknown deploy command: {}".format(action)
+            print("Unknown deploy command: {}".format(action))
 
     # takes either a deploymentgroup name or a cluster.role name and returns deploymentgroup name
     def get_deployment_group_name(self, group_arg):
@@ -194,17 +195,17 @@ class Udo:
                 cfg = config.get_role_config(cluster, role)
                 group_name = cfg.get('deployment_group')
                 if not group_name:
-                    print("Failed to find DeploymentGroup name in configuration for role {}".format(role))
+                    print(("Failed to find DeploymentGroup name in configuration for role {}".format(role)))
                     return None
             else:
-                print("Invalid DeploymentGroup name '{}' and no deployment_group is configured for this role.".format(group_arg))
+                print(("Invalid DeploymentGroup name '{}' and no deployment_group is configured for this role.".format(group_arg)))
                 return None
         return group_name
 
     def version(self, *args):
         args = list(args)
         try:
-            print(pkg_resources.get_distribution('udo').version)
+            print((pkg_resources.get_distribution('udo').version))
         except:
             print("udo not installed from PyPi")
 
@@ -212,15 +213,15 @@ class Udo:
     def test(self, *args):
         args = list(args)
         if not len(args) or not args[0]:
-            print "test command requires an action. Valid actions are: "
-            print " integrations"
+            print("test command requires an action. Valid actions are: ")
+            print(" integrations")
             return
         action = args.pop(0)
 
         if action == 'integrations':
             util.message_integrations("Testing Udo integrations")
         else:
-            print "Unknown test command: {}".format(action)
+            print("Unknown test command: {}".format(action))
 
     # returns cluster_name,role_name
     def get_cluster_and_role_from_args(self, arg, quiet=False):
@@ -258,10 +259,10 @@ class Udo:
             return fale("Invalid configuration for {}: no roles are defined".format(cluster_name))
 
         if not role_name:
-            role_names = roles.keys()
+            role_names = list(roles.keys())
             if len(role_names) == 1:
                 # assume the only role
-                print("No role specified, assuming {}".format(role_names[0]))
+                print(("No role specified, assuming {}".format(role_names[0])))
                 role_name = role_names[0]
             else:
                 err = "Multiple roles available for cluster {}".format(cluster_name)
@@ -285,11 +286,11 @@ def invoke_console():
     
     if args.cmd not in dir(Udo):
         if args.cmd:
-            print "'{}' is not a valid command".format(args.cmd)
+            print("'{}' is not a valid command".format(args.cmd))
         else:
-            print "You must specify a command"
+            print("You must specify a command")
         # full command summary
-        print """
+        print("""
 Valid commands are:
   * lc cloudinit - display cloud-init script
   * lc create - create a launch configuration
@@ -313,7 +314,7 @@ Valid commands are:
   * deploy last - shows status of most recent deployment
   * deploy stop - cancel last deployment
   * version - print udo version
-        """
+        """)
         sys.exit(1)
 
     # execute cmd

@@ -31,7 +31,7 @@ def load():
     try:
         f = open(file_path, 'r')
     except IOError as e:
-        print "Failed opening file {}: {}".format(file_path, os.strerror(e.errno))
+        print("Failed opening file {}: {}".format(file_path, os.strerror(e.errno)))
         return None
     contents = f.read()
     f.close()
@@ -59,8 +59,8 @@ class Config:
 
         if not self._root:
             # loading config failed, can't proceed
-            print "No udo.yml configuration file was found."
-            print "Please create one or change to the directory containing your configuration."
+            print("No udo.yml configuration file was found.")
+            print("Please create one or change to the directory containing your configuration.")
             sys.exit(1)
 
     def clone(self):
@@ -106,7 +106,7 @@ class Config:
         for level in path:
             if not cur_level:
                 # dead end traversing downwards. go with whatever we found last
-                print "Warning: {} is not defined in configuration at {}".format(key, level)
+                print("Warning: {} is not defined in configuration at {}".format(key, level))
                 return cur_val
 
             if key in cur_level:
@@ -132,7 +132,7 @@ class Config:
             return val1
 
         if val1.__class__ is not val2.__class__:
-            print "{} is not the same type as {}".format(val1.__class__, val2.__class__)
+            print("{} is not the same type as {}".format(val1.__class__, val2.__class__))
             return val1
 
         if val1.__class__ is list:
@@ -141,7 +141,7 @@ class Config:
 
         if val1.__class__ is dict:
             # merge dicts
-            merged = dict(val1.items() + val2.items())
+            merged = dict(list(val1.items()) + list(val2.items()))
             # print "merged: {}".format(merged)
             return merged
 
@@ -152,7 +152,7 @@ class Config:
         # check clusters
         cluster_config = self.new_root('clusters')
         if cluster_name not in cluster_config.get():
-            print "Invalid cluster name: {}".format(cluster_name)
+            print("Invalid cluster name: {}".format(cluster_name))
             return
         return cluster_config.new_root(cluster_name)
 
@@ -160,16 +160,16 @@ class Config:
         # check clusters
         cluster_config = self.new_root('clusters')
         if cluster_name not in cluster_config.get():
-            print "Invalid cluster name: {}".format(cluster_name)
+            print("Invalid cluster name: {}".format(cluster_name))
             return
 
         # check roles
         roles_config = cluster_config.new_root(cluster_name, 'roles')
         if not roles_config:
-            print "No roles defined in cluster {}".format(cluster_name)
+            print("No roles defined in cluster {}".format(cluster_name))
             return
         if role_name not in roles_config.get():
-            print "Invalid role name: {}".format(role_name)
+            print("Invalid role name: {}".format(role_name))
             return
 
         return roles_config.new_root(role_name)

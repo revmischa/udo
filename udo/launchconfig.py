@@ -5,12 +5,12 @@ import sys
 from pprint import pprint
 from string import Template
 
-import cluster
-import config
-import util
+from . import cluster
+from . import config
+from . import util
 
 from time import sleep
-from util import debug
+from .util import debug
 
 _cfg = config.Config()
 
@@ -111,6 +111,7 @@ class LaunchConfig:
         # add extra template vars
         cloud_init_config['base_packages'] = " ".join(_cfg.get('packages')) or ''
         cloud_init_config['yum_plugin_url'] = _cfg.get('repo', 'plugin_url') or ''
+        cloud_init_config['udo_region'] = _cfg.get('region') or ''
         # from role config
         cloud_init_config['role_packages'] = " ".join(self.role_config.get('packages')) or ''
         cloud_init_config['repo_url'] = self.role_config.get('repo_url') or ''
@@ -141,7 +142,7 @@ class LaunchConfig:
         debug("in launchconfig.py update")
         if not self.exists():
             # easy, just create it
-            print "not exists"
+            print("not exists")
             self.activate()
             return self
         # generate a name for the new lc version
@@ -169,7 +170,7 @@ class LaunchConfig:
         lcs={}
         for lc in _lcs:
             lcs[lc['LaunchConfigurationName']]=lc
-        for key, value in lcs.iteritems():
+        for key, value in lcs.items():
             if key.startswith(self.name()):
                 return value
         # if we didnt find a LaunchConfig above by the time we get to here, return None
@@ -184,7 +185,7 @@ class LaunchConfig:
         if not self.exists():
             return
         lcname = self.get_lc_server_name()
-        print "Deleting launchconfig {}...".format(lcname)
+        print("Deleting launchconfig {}...".format(lcname))
         client = util.as_conn()
         response = client.delete_launch_configuration( LaunchConfigurationName = lcname )
         sleep(5) # give aws a chance to delete the launchconfig
@@ -217,9 +218,13 @@ class LaunchConfig:
         # get configuration for this LC
         cfg = self.role_config
 
+        extra = dict()
+        spot_price = cfg.get('spot_price')
+        if spot_price:
+            extra['SpotPrice'] = str(spot_price)
         tenancy = cfg.get('tenancy')
-        if not tenancy:
-            tenancy='default'
+        if tenancy:
+            extra['PlacementTenancy'] = tenancy
 
         # NOTE: wrap the following in a try block to catch errors
         lc = conn.create_launch_configuration(
@@ -231,7 +236,7 @@ class LaunchConfig:
             KeyName = cfg.get('keypair_name'),
             UserData = self.cloud_init_script(),
             SecurityGroups = cfg.get('security_groups'),
-            PlacementTenancy = tenancy,
+            **extra,
         )
         #if not conn.create_launch_configuration(lc):
         #    print "Error creating LaunchConfig {}".format(name)

@@ -4,8 +4,7 @@
 
 You have an application you want to deploy into AWS, taking advantage of all of the cool features and services generously provided by Amazon. You have an interest in doing things the Right Way, and not Reinventing The Wheel. You have some modest level of clue.
 
-Have a look at the [sample configuration](udo.sample.yml) to get an idea of what Udo
-will manage.
+Have a look at the sample configurations ([simple](udo.sample.simple.yml), [full](udo.sample.yml)) to get an idea of what Udo will manage and how to configure it.
 
 ## Quickstart:  
 
@@ -17,7 +16,7 @@ will manage.
 
 #### Step 3: Configure Udo
 * Create a config file in our project's directory: `cd path/to/myapp/`
-* Copy and paste the [sample udo.yml](udo.sample.yml) file and edit it
+* Copy and paste the [sample udo.yml](udo.sample.simple.yml) file and edit it
 
 #### Using Udo
 ```
