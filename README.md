@@ -1,6 +1,6 @@
 ![Travis build status](https://travis-ci.org/revmischa/udo.svg?branch=master)
 
-##Project: *Unemployed DevOps* (UDO)
+## Project: *Unemployed DevOps* (UDO)
 
 You have an application you want to deploy into AWS, taking advantage of all of the cool features and services generously provided by Amazon. You have an interest in doing things the Right Way, and not Reinventing The Wheel. You have some modest level of clue.
 
