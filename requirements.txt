@@ -4,7 +4,7 @@ docutils==0.14
 futures==3.0.5
 jmespath==0.9.3
 python-dateutil==2.6.1
-PyYAML==3.11
+PyYAML==5.1
 requests==2.11.0
 s3transfer==0.1.10
 six==1.10.0
